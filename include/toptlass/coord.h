@@ -48,6 +48,9 @@ public:
         }
     }
 
+    TOPTLASS_HOST_DEVICE
+    Index& at(int dim) {return idx[dim];}
+
 };
 
 } // namespace toptlass
