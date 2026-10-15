@@ -131,8 +131,8 @@ struct DefaultMmaCore<Shape_, WarpShape_, GemmShape<1, 1, 1>, ElementA_,
     static const int LaneLayout = ThreadTileM > 4 && ThreadTileN > 4 ? 2 : 1;
     static const int numElementsA = 128 / sizeof_bits<ElementA>::value;
     static const int numElementsB = 128 / sizeof_bits<ElementB>::value;
-    static const int LaneM = cutlass::const_min(numElementsA, ThreadTileM);
-    static const int LaneN = cutlass::const_min(numElementsB, ThreadTileN);
+    static const int LaneM = toptlass::const_min(numElementsA, ThreadTileM);
+    static const int LaneN = toptlass::const_min(numElementsB, ThreadTileN);
 
     static int const kPaddingM = detail::simt_transpose_padding(kWarpSize, Shape::kK, sizeof_bits<ElementA>::value);
     static int const kPaddingN = detail::simt_transpose_padding(kWarpSize, Shape::kK, sizeof_bits<ElementB>::value);
@@ -141,17 +141,34 @@ struct DefaultMmaCore<Shape_, WarpShape_, GemmShape<1, 1, 1>, ElementA_,
                     "Padding must be divisible by Lane");
 
     // these should have max of thread tile also
-    using LaneMmaShape = cutlass::gemm::GemmShape<
+    using LaneMmaShape = toptlass::gemm::GemmShape<
         LaneM,
         LaneN,
         1>;
-    using Policy = cutlass::gemm::warp::MmaSimtPolicy<
-      cutlass::MatrixShape<WarpNumThreadsM, WarpNumThreadsN>,   // WarpShape
-      cutlass::layout::RowMajorInterleaved<LaneLayout>,         // LaneLayout
+    using Policy = toptlass::gemm::warp::MmaSimtPolicy<
+      toptlass::MatrixShape<WarpNumThreadsM, WarpNumThreadsN>,   // WarpShape
+      toptlass::layout::RowMajorInterleaved<LaneLayout>,         // LaneLayout
       LaneMmaShape
     >;
 
-    
+     using MmaWarpSimt = toptlass::gemm::warp::MmaSimt<
+      WarpShape,      /// Size of the Gemm problem - concept: gemm::GemmShape<> 128, 128, 8
+      ElementA,       /// Data type of A elements
+      SmemLayoutA,    /// Layout of A matrix (concept: MatrixLayout)
+      ElementB,       /// Data type of B elements
+      SmemLayoutB,    /// Layout of B matrix (concept: MatrixLayout)
+      ElementC,       /// Element type of C matrix
+      LayoutC,        /// Layout of C matrix (concept: MatrixLayout)
+      Policy          /// Policy describing warp-level MmaSimtOp (concept: MmaSimtOp policy)
+    >;
+
+    /// Policy used to define MmaPipelined 
+    using MmaPolicy = MmaPolicy<
+        MmaWarpSimt,
+        MatrixShape<kPaddingM, 0>,    // skew for A matrix to avoid SMEM bank conflicts
+        MatrixShape<0, kPaddingN>,    // skew for B matrix to avoid SMEM bank conflicts
+        WarpCount::kK
+    >;
 
 };
 

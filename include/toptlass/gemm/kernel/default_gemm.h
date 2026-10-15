@@ -130,7 +130,7 @@ struct DefaultGemm<
     ThreadblockShape,
     WarpShape,
     GemmShape<1, 1, 1>,
-    // EpilogueOutputOp,
+    EpilogueOutputOp,
     ThreadblockSwizzle,
     2,
     SplitKSerial,
@@ -143,6 +143,62 @@ struct DefaultGemm<
     PermuteALayout,
     PermuteBLayout,
     typename std::enable_if< ! std::is_same<ArchTag, arch::Gcu300>::value >::type > {
+
+        static_assert((std::is_same<LayoutC, layout::RowMajor>::value
+             || std::is_same<LayoutC, layout::AffineRankN<2>>::value),
+             "Epilogue in the kernel level must be row major");
+
+        /// Define the threadblock-scoped matrix multiply-accumulate
+        using Mma = typename toptlass::gemm::threadblock::DefaultMma<
+            ElementA,
+            LayoutA,
+            kAlignmentA,
+            ElementB,
+            LayoutB,
+            kAlignmentB,
+            ElementAccumulator,
+            LayoutC,
+            arch::OpClassSimt,
+            arch::Sm50,
+            ThreadblockShape,
+            WarpShape,
+            GemmShape<1, 1, 1>,
+            2,
+            Operator,
+            false,
+            SharedMemoryClear,
+            GatherA,
+            GatherB,
+            PermuteALayout,
+            PermuteBLayout>::ThreadblockMma;
+
+        static int const kEpilogueElementsPerAccess = EpilogueOutputOp::kCount;
+        static_assert(kEpilogueElementsPerAccess == 1, "simt epilogue must operate on scalars");
+
+        /// Define the epilogue
+        using RegularEpilogue = typename toptlass::epilogue::threadblock::DefaultEpilogueSimt<
+            ThreadblockShape,
+            typename Mma::Operator,
+            EpilogueOutputOp,
+            kEpilogueElementsPerAccess,
+            ScatterD,
+            PermuteDLayout
+            >::Epilogue;
+
+        using Affine2Epilogue = typename toptlass::epilogue::threadblock::DefaultEpilogueSimtAffineRankN<
+            2,
+            ThreadblockShape,
+            typename Mma::Operator,
+            EpilogueOutputOp,
+            kEpilogueElementsPerAccess
+            >::Epilogue;
+
+        using Epilogue = typename std::conditional<std::is_same<LayoutC, layout::RowMajor>::value,
+                                                        RegularEpilogue,
+                                                        Affine2Epilogue>::type;
+
+        /// Define the kernel-level GEMM operator.
+        using GemmKernel = kernel::Gemm<Mma, Epilogue, ThreadblockSwizzle, SplitKSerial>;
 
 };
 

@@ -14,7 +14,7 @@ public:
     using Element = Element_;
     using Layout = Layout_;
 
-    using Reference = std::conditional<
+    using Reference = typename std::conditional<
         sizeof_bits<Element>::value >= 8,
         Element &,
         SubbyteReference<Element>

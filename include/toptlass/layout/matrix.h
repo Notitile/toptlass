@@ -72,11 +72,11 @@ public:
   //
 
   /// Ctor
-  CUTLASS_HOST_DEVICE
+  TOPTLASS_HOST_DEVICE
   ColumnMajor(LongIndex ldm = 0): stride_(ldm) { }
   
   /// Ctor
-  CUTLASS_HOST_DEVICE
+  TOPTLASS_HOST_DEVICE
   ColumnMajor(Stride stride): stride_(stride) { }
 
 };
@@ -119,22 +119,22 @@ public:
   //
 
   /// Ctor
-  CUTLASS_HOST_DEVICE
+  TOPTLASS_HOST_DEVICE
   RowMajorInterleaved(LongIndex ldm = 0): stride_(ldm) { }
   
   /// Ctor
-  CUTLASS_HOST_DEVICE
+  TOPTLASS_HOST_DEVICE
   RowMajorInterleaved(Stride stride): stride_(stride) { }
 
   /// Helper returns a layout to a tightly packed tensor
-  CUTLASS_HOST_DEVICE
+  TOPTLASS_HOST_DEVICE
   static RowMajorInterleaved packed(MatrixCoord const &extent) {
     return RowMajorInterleaved(extent.column() * kInterleave);
   }
 
   /// Returns the offset of a coordinate in linear memory. 
   /// Assumes coordinate has convention (row, column)
-  CUTLASS_HOST_DEVICE
+  TOPTLASS_HOST_DEVICE
   LongIndex operator()(MatrixCoord const &coord) const {
     Index row_major = coord.row() / kInterleave;
     Index row_minor = coord.row() % kInterleave;
@@ -142,7 +142,7 @@ public:
   }
 
   /// Inverse of layout function, mapping linear offset to logical coordinate
-  CUTLASS_HOST_DEVICE
+  TOPTLASS_HOST_DEVICE
   MatrixCoord inverse(LongIndex offset) const {
 
     Index row_major = Index(offset / stride_[0]);
@@ -155,31 +155,31 @@ public:
   }
 
   /// Returns the stride of the layout
-  CUTLASS_HOST_DEVICE
+  TOPTLASS_HOST_DEVICE
   Stride stride() const {
     return stride_;
   }
 
   /// Returns the stride of the layout
-  CUTLASS_HOST_DEVICE
+  TOPTLASS_HOST_DEVICE
   Stride & stride() {
     return stride_;
   }
 
   /// Returns the stride of the layout
-  CUTLASS_HOST_DEVICE
+  TOPTLASS_HOST_DEVICE
   typename Stride::Index stride(int idx) const {
     return stride_[idx];
   }
 
   /// Returns the stride of the layout
-  CUTLASS_HOST_DEVICE
+  TOPTLASS_HOST_DEVICE
   typename Stride::Index & stride(int idx) {
     return stride_[idx];
   }
 
   /// Compute the number of contiguous elements needed to store a tensor with the given size
-  CUTLASS_HOST_DEVICE
+  TOPTLASS_HOST_DEVICE
   LongIndex capacity(MatrixCoord const &extent) const {
     return (extent.row() + kInterleave - 1) / kInterleave * stride_[0];
   }

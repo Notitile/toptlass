@@ -36,7 +36,7 @@ struct PitchLinearStripminedThreadMap {
 
     };
 
-    using Iterations = std::conditional<
+    using Iterations = typename std::conditional<
         Threads >= Detail::ShapeVec::kContiguous,
         layout::PitchLinearShape<
           1,
@@ -49,7 +49,7 @@ struct PitchLinearStripminedThreadMap {
       layout::PitchLinearShape<Detail::ShapeVec::kContiguous / kThreads,
                                Detail::ShapeVec::kStrided>>::type;
 
-    using Delta = std::conditional<
+    using Delta = typename std::conditional<
         Threads >= Detail::ShapeVec::kContiguous,
         layout::PitchLinearShape<
         1,
@@ -61,7 +61,7 @@ struct PitchLinearStripminedThreadMap {
         >
     >::type;
 
-    using StorageShape = std::conditional<
+    using StorageShape = typename std::conditional<
       Threads >= Detail::ShapeVec::kContiguous,
       layout::PitchLinearShape<Shape::kContiguous,
                                Iterations::kStrided*(kThreads / Detail::ShapeVec::kContiguous)>,
@@ -118,7 +118,7 @@ struct TransposePitchLinearThreadMapSimt {
     /// Maps thread ID to a coordinate offset within the tensor's logical
     /// coordinate space Note this is slightly different from the one of
     /// PitchLinearWarpRakedThreadMap.
-    CUTLASS_HOST_DEVICE
+    TOPTLASS_HOST_DEVICE
         static TensorCoord initial_offset(int thread_id) {
 
         TensorCoord coord = ThreadMap::initial_offset(thread_id);

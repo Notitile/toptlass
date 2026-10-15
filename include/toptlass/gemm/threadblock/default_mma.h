@@ -96,6 +96,35 @@ struct DefaultMma<ElementA, LayoutA, kAlignmentA, ElementB, LayoutB,
                   arch::OpClassSimt, ArchTag, ThreadblockShape, WarpShape,
                   InstructionShape, 2, Operator, false, SharedMemoryClearOption::kNone,
                   GatherA, GatherB, PermuteALayout, PermuteBLayout> {
+    static_assert(platform::is_same<LayoutC, layout::RowMajor>::value
+             || platform::is_same<LayoutC, layout::AffineRankN<2>>::value,
+             "simt epilogue must be row major");
+
+    // Define the MmaCore components
+    using MmaCore = typename toptlass::gemm::threadblock::DefaultMmaCore<
+        ThreadblockShape, WarpShape, InstructionShape, ElementA, LayoutA,
+        ElementB, LayoutB, ElementAccumulator, LayoutC,
+        arch::OpClassSimt, 2, Operator>;
+
+    // Define iterators over tiles from the A operand
+    using IteratorA =
+        toptlass::transform::threadblock::PredicatedTileIterator<
+            toptlass::MatrixShape<MmaCore::Shape::kM, MmaCore::Shape::kK>,
+            ElementA, LayoutA, 1, typename MmaCore::IteratorThreadMapA, kAlignmentA,
+            GatherA, PermuteALayout>;
+
+    // Define iterators over tiles from the B operand
+    using IteratorB =
+        toptlass::transform::threadblock::PredicatedTileIterator<
+            toptlass::MatrixShape<MmaCore::Shape::kK, MmaCore::Shape::kN>,
+            ElementB, LayoutB, 0, typename MmaCore::IteratorThreadMapB, kAlignmentB,
+            GatherB, PermuteBLayout>;
+
+    // Define the threadblock-scoped pipelined matrix multiply
+    using ThreadblockMma = toptlass::gemm::threadblock::MmaPipelined<
+        typename MmaCore::Shape, IteratorA, typename MmaCore::SmemIteratorA,
+        IteratorB, typename MmaCore::SmemIteratorB, ElementAccumulator,
+        LayoutC, typename MmaCore::MmaPolicy>;
                     
 
 };
