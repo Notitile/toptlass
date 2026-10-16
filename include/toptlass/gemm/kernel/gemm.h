@@ -21,15 +21,15 @@ namespace kernel {
 
 template <
   typename Mma_,                  ///! Threadblock-scoped matrix multiply-accumulate 
-  typename Epilogue_,             ///! Epilogue
+  // typename Epilogue_,             ///! Epilogue
   typename ThreadblockSwizzle_,   ///! Threadblock swizzling function
   bool SplitKSerial               ///! If true, code supporting split-K via serial reduction is enabled.
 >
 struct Gemm {
 
   using Mma = Mma_;
-  using Epilogue = Epilogue_;
-  using OutputOp = typename Epilogue::OutputOp;
+  // using Epilogue = Epilogue_;
+  // using OutputOp = typename Epilogue::OutputOp;
   using ThreadblockSwizzle = ThreadblockSwizzle_;
   static bool const kSplitKSerial = SplitKSerial;
 
@@ -46,11 +46,11 @@ struct Gemm {
     typename Mma::IteratorA::TensorRef ref_A;
     typename Mma::IteratorB::Params params_B;
     typename Mma::IteratorB::TensorRef ref_B;
-    typename Epilogue::OutputTileIterator::Params params_C;
-    typename Epilogue::OutputTileIterator::TensorRef ref_C;
-    typename Epilogue::OutputTileIterator::Params params_D;
-    typename Epilogue::OutputTileIterator::TensorRef ref_D;
-    typename OutputOp::Params output_op;
+    // typename Epilogue::OutputTileIterator::Params params_C;
+    // typename Epilogue::OutputTileIterator::TensorRef ref_C;
+    // typename Epilogue::OutputTileIterator::Params params_D;
+    // typename Epilogue::OutputTileIterator::TensorRef ref_D;
+    // typename OutputOp::Params output_op;
     int *semaphore;
     int gemm_k_size;
     // For gather+scatter operations
@@ -71,9 +71,9 @@ struct Gemm {
       toptlass::gemm::GemmCoord const & grid_tiled_shape,
       typename Mma::IteratorA::TensorRef ref_A,
       typename Mma::IteratorB::TensorRef ref_B,
-      typename Epilogue::OutputTileIterator::TensorRef ref_C,
-      typename Epilogue::OutputTileIterator::TensorRef ref_D,
-      typename OutputOp::Params output_op = typename OutputOp::Params(),
+      // typename Epilogue::OutputTileIterator::TensorRef ref_C,
+      // typename Epilogue::OutputTileIterator::TensorRef ref_D,
+      // typename OutputOp::Params output_op = typename OutputOp::Params(),
       int *workspace = nullptr,
       int const *gather_A_indices = nullptr,
       int const *gather_B_indices = nullptr,
@@ -86,11 +86,11 @@ struct Gemm {
       ref_A(ref_A),
       params_B(ref_B.layout()),
       ref_B(ref_B),
-      params_C(ref_C.layout()),
-      ref_C(ref_C),
-      params_D(ref_D.layout()),
-      ref_D(ref_D),
-      output_op(output_op),
+      // params_C(ref_C.layout()),
+      // ref_C(ref_C),
+      // params_D(ref_D.layout()),
+      // ref_D(ref_D),
+      // output_op(output_op),
       gather_A_indices(gather_A_indices),
       gather_B_indices(gather_B_indices),
       scatter_D_indices(scatter_D_indices) {
@@ -107,7 +107,7 @@ struct Gemm {
   /// Shared memory storage structure
   union SharedStorage {
     typename Mma::SharedStorage main_loop;
-    typename Epilogue::SharedStorage epilogue;
+    // typename Epilogue::SharedStorage epilogue;
   };
 
   //
@@ -123,8 +123,8 @@ struct Gemm {
     toptlass::gemm::GemmCoord const & problem_size,
     typename Mma::IteratorA::TensorRef ref_A,
     typename Mma::IteratorB::TensorRef ref_B,
-    typename Epilogue::OutputTileIterator::TensorRef ref_C,
-    typename Epilogue::OutputTileIterator::TensorRef ref_D) {
+    // typename Epilogue::OutputTileIterator::TensorRef ref_C,
+    // typename Epilogue::OutputTileIterator::TensorRef ref_D) {
 
     static int const kAlignmentA = (std::is_same<typename Mma::IteratorA::Layout,
                                                       layout::ColumnMajorInterleaved<32>>::value)
@@ -140,13 +140,13 @@ struct Gemm {
                                                         layout::RowMajorInterleaved<64>>::value)
                                      ? 64
                                      : Mma::IteratorB::AccessType::kElements;
-    static int const kAlignmentC = (std::is_same<typename Epilogue::OutputTileIterator::Layout,
-                                                      layout::ColumnMajorInterleaved<32>>::value)
-                                   ? 32
-                                   : (std::is_same<typename Epilogue::OutputTileIterator::Layout,
-                                                        layout::ColumnMajorInterleaved<64>>::value)
-                                     ? 64
-                                     : Epilogue::OutputTileIterator::kElementsPerAccess;
+    // static int const kAlignmentC = (std::is_same<typename Epilogue::OutputTileIterator::Layout,
+    //                                                   layout::ColumnMajorInterleaved<32>>::value)
+    //                                ? 32
+    //                                : (std::is_same<typename Epilogue::OutputTileIterator::Layout,
+    //                                                     layout::ColumnMajorInterleaved<64>>::value)
+    //                                  ? 64
+    //                                  : Epilogue::OutputTileIterator::kElementsPerAccess;
 
     if (!TensorRef_aligned(ref_A, kAlignmentA)) {
       return Status::kErrorMisalignedOperand;
@@ -156,13 +156,13 @@ struct Gemm {
       return Status::kErrorMisalignedOperand;
     }
 
-    if (!TensorRef_aligned(ref_C, kAlignmentC)) {
-      return Status::kErrorMisalignedOperand;
-    }
+    // if (!TensorRef_aligned(ref_C, kAlignmentC)) {
+    //   return Status::kErrorMisalignedOperand;
+    // }
 
-    if (!TensorRef_aligned(ref_D, kAlignmentC)) {
-      return Status::kErrorMisalignedOperand;
-    }
+    // if (!TensorRef_aligned(ref_D, kAlignmentC)) {
+    //   return Status::kErrorMisalignedOperand;
+    // }
 
     return Status::kSuccess;
   }
@@ -248,96 +248,96 @@ struct Gemm {
     // Epilogue
     //
 
-    OutputOp output_op(params.output_op);
+    // OutputOp output_op(params.output_op);
 
     //
     // Masked tile iterators constructed from members
     //
 
-    threadblock_tile_offset =
-        threadblock_swizzle.get_tile_offset(params.swizzle_log_tile);
+    // threadblock_tile_offset =
+    //     threadblock_swizzle.get_tile_offset(params.swizzle_log_tile);
 
-    //assume identity swizzle
-    MatrixCoord threadblock_offset(
-      threadblock_tile_offset.m() * Mma::Shape::kM,
-      threadblock_tile_offset.n() * Mma::Shape::kN
-    );
+    // //assume identity swizzle
+    // MatrixCoord threadblock_offset(
+    //   threadblock_tile_offset.m() * Mma::Shape::kM,
+    //   threadblock_tile_offset.n() * Mma::Shape::kN
+    // );
 
-    int block_idx = threadblock_tile_offset.m() + threadblock_tile_offset.n() * params.grid_tiled_shape.m();
+    // int block_idx = threadblock_tile_offset.m() + threadblock_tile_offset.n() * params.grid_tiled_shape.m();
 
-    // Construct the semaphore.
-    Semaphore semaphore(params.semaphore + block_idx, thread_idx);
+    // // Construct the semaphore.
+    // Semaphore semaphore(params.semaphore + block_idx, thread_idx);
 
-    // If performing a reduction via split-K, fetch the initial synchronization
-    if (kSplitKSerial && params.grid_tiled_shape.k() > 1) {
+    // // If performing a reduction via split-K, fetch the initial synchronization
+    // if (kSplitKSerial && params.grid_tiled_shape.k() > 1) {
       
-      // Fetch the synchronization lock initially but do not block.
-      semaphore.fetch();
+    //   // Fetch the synchronization lock initially but do not block.
+    //   semaphore.fetch();
 
-      // Indicate which position in a serial reduction the output operator is currently updating
-      output_op.set_k_partition(threadblock_tile_offset.k(), params.grid_tiled_shape.k());
-    }
+    //   // Indicate which position in a serial reduction the output operator is currently updating
+    //   output_op.set_k_partition(threadblock_tile_offset.k(), params.grid_tiled_shape.k());
+    // }
 
-    // Tile iterator loading from source tensor.
-    typename Epilogue::OutputTileIterator iterator_C(
-      params.params_C,
-      params.ref_C.data(),
-      params.problem_size.mn(),
-      thread_idx,
-      threadblock_offset,
-      params.scatter_D_indices
-    );
+    // // Tile iterator loading from source tensor.
+    // typename Epilogue::OutputTileIterator iterator_C(
+    //   params.params_C,
+    //   params.ref_C.data(),
+    //   params.problem_size.mn(),
+    //   thread_idx,
+    //   threadblock_offset,
+    //   params.scatter_D_indices
+    // );
 
-    // Tile iterator writing to destination tensor.
-    typename Epilogue::OutputTileIterator iterator_D(
-      params.params_D,
-      params.ref_D.data(),
-      params.problem_size.mn(),
-      thread_idx,
-      threadblock_offset,
-      params.scatter_D_indices
-    );
+    // // Tile iterator writing to destination tensor.
+    // typename Epilogue::OutputTileIterator iterator_D(
+    //   params.params_D,
+    //   params.ref_D.data(),
+    //   params.problem_size.mn(),
+    //   thread_idx,
+    //   threadblock_offset,
+    //   params.scatter_D_indices
+    // );
 
-    Epilogue epilogue(
-      shared_storage.epilogue, 
-      thread_idx, 
-      warp_idx, 
-      lane_idx);
+    // Epilogue epilogue(
+    //   shared_storage.epilogue, 
+    //   thread_idx, 
+    //   warp_idx, 
+    //   lane_idx);
 
-    // Wait on the semaphore - this latency may have been covered by iterator construction
-    if (kSplitKSerial && params.grid_tiled_shape.k() > 1) {
+    // // Wait on the semaphore - this latency may have been covered by iterator construction
+    // if (kSplitKSerial && params.grid_tiled_shape.k() > 1) {
         
-      // For subsequent threadblocks, the source matrix is held in the 'D' tensor.
-      if (threadblock_tile_offset.k()) {
-        iterator_C = iterator_D;
-      }
+    //   // For subsequent threadblocks, the source matrix is held in the 'D' tensor.
+    //   if (threadblock_tile_offset.k()) {
+    //     iterator_C = iterator_D;
+    //   }
 
-      semaphore.wait(threadblock_tile_offset.k());
+    //   semaphore.wait(threadblock_tile_offset.k());
 
-    }
+    // }
 
-    // Execute the epilogue operator to update the destination tensor.
-    epilogue(output_op, iterator_D, accumulators, iterator_C); 
+    // // Execute the epilogue operator to update the destination tensor.
+    // epilogue(output_op, iterator_D, accumulators, iterator_C); 
     
-    //
-    // Release the semaphore
-    //
+    // //
+    // // Release the semaphore
+    // //
 
-    if (kSplitKSerial && params.grid_tiled_shape.k() > 1) {
+    // if (kSplitKSerial && params.grid_tiled_shape.k() > 1) {
       
-      int lock = 0;
-      if (params.grid_tiled_shape.k() == threadblock_tile_offset.k() + 1) {
+    //   int lock = 0;
+    //   if (params.grid_tiled_shape.k() == threadblock_tile_offset.k() + 1) {
 
-        // The final threadblock resets the semaphore for subsequent grids.
-        lock = 0;
-      }
-      else {
-        // Otherwise, the semaphore is incremented
-        lock = threadblock_tile_offset.k() + 1;
-      }
+    //     // The final threadblock resets the semaphore for subsequent grids.
+    //     lock = 0;
+    //   }
+    //   else {
+    //     // Otherwise, the semaphore is incremented
+    //     lock = threadblock_tile_offset.k() + 1;
+    //   }
 
-      semaphore.release(lock);
-    }
+    //   semaphore.release(lock);
+    // }
   }
 };
 
