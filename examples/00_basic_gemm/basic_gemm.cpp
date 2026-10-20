@@ -5,7 +5,52 @@
 
 #include "helper.h"
 
-// #include "tpotlass/gemm/device/gemm.h"
+#include "cutlass/gemm/device/gemm.h"
+
+
+
+topsError_t TopTlassSgemmNN(
+    int M,
+    int N,
+    int K,
+    float alpha,
+    float const *A,
+    int lda,
+    float const *B,
+    int ldb,
+    float beta,
+    float *C,
+    int ldc){
+
+    using ColumnMajor = cutlass::layout::ColumnMajor;
+
+    using ToptlassGemm = cutlass::gemm::device::Gemm<float,
+                                                      ColumnMajor,
+                                                      float,
+                                                      ColumnMajor,
+                                                      float,
+                                                      ColumnMajor>;
+
+    ToptlassGemm gemm_operator;
+
+    ToptlassGemm::Arguments args({M,N,K},
+                                 {A,lda},
+                                 {B,ldb},
+                                 {C,ldc},
+                                 {C,ldc},
+                                 {alpha, beta});
+
+    cutlass::Status status = gemm_operator(args);
+
+    if (status != cutlass::Status::kSuccess) {
+        return topsErrorUnknown;
+    }
+
+    // Return success, if no errors were encountered.
+    return topsSuccess;
+
+}
+
 
 
 __global__ void InitializeMatrix_kernel(
@@ -14,26 +59,38 @@ __global__ void InitializeMatrix_kernel(
   int columns,
   int seed = 0) {
 
-  int i = threadIdx.x + blockIdx.x * blockDim.x;
-  int j = threadIdx.y + blockIdx.y * blockDim.y;
+    int i = threadIdx.x + blockIdx.x * blockDim.x;
+    int j = threadIdx.y + blockIdx.y * blockDim.y;
+    tops_dte_ctx_t ctx;
+    tops::dte_scope s(ctx);
 
-  if (i < rows && j < columns) {
-    int offset = i + j * rows;
+    tops::mdspan data_l3(tops::Global, &matrix[i + j * 16], 1);
+    float buf_l1[1];
+    buf_l1[0] = 0.5;
 
-    // Generate arbitrary elements.
-    int const k = 16807;
-    int const m = 16;
-    float value = float(((offset + seed) * k % m) - m / 2);
-    (void)value;
-    // matrix[offset] = value;
-  }
+    tops::mdspan data_l1(tops::Private, buf_l1, 1);
+
+    if (i < rows && j < columns) {
+        // int offset = i + j * 16;
+
+        // Generate arbitrary elements.
+        // int const k = 16807;
+        // int const m = 16;
+        // float value = float(((offset + seed) * k % m) - m / 2);
+        // (void)value;
+        // buf_l1[0] = 0.5;
+        tops::memcpy(ctx, data_l3, data_l1);
+
+    }
+
+
 }
 
 
 /// Simple function to initialize a matrix to arbitrary small integers.
 topsError_t InitializeMatrix(float *matrix, int rows, int columns, int seed = 0) {
 
-  dim3 block(3, 4);
+  dim3 block(2,2);
   dim3 grid(
     (rows + block.x - 1) / block.x,
     (columns + block.y - 1) / block.y
@@ -44,6 +101,16 @@ topsError_t InitializeMatrix(float *matrix, int rows, int columns, int seed = 0)
   return topsGetLastError();
 }
 
+
+void print_matrix(const char* name, const float* data, int rows, int cols) {
+    printf("%s (%dx%d):\n", name, rows, cols);
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            printf("%10.4f ", data[i * cols + j]);
+        }
+        printf("\n");
+    }
+}
 
 topsError_t AllocateMatrix(float **matrix,int rows,int columns,int seed=0){
 
@@ -71,10 +138,10 @@ topsError_t AllocateMatrix(float **matrix,int rows,int columns,int seed=0){
     // Initialize matrix elements to arbitrary small integers.
     result = InitializeMatrix(*matrix, rows, columns, seed);
 
-    topsDeviceSynchronize();
+    TOPS_CHECK(topsDeviceSynchronize());
 
-    topsMemcpy(h_result, *matrix, sizeof_matrix, topsMemcpyDeviceToHost);
-
+    TOPS_CHECK(topsMemcpy(h_result, *matrix, sizeof_matrix, topsMemcpyDeviceToHost));
+    print_matrix("h_result", h_result, rows, columns);
     if (result != topsSuccess) {
         std::cerr << "Failed to initialize matrix: "
         << topsGetErrorString(result) << std::endl;
@@ -124,24 +191,24 @@ topsError_t TestToptlassGemm(int M,int N,int K,float alpha,float beta){
     result = AllocateMatrix(&B, K, N, 17);
 
     if (result !=  topsSuccess) {
-        topsFree(A);
+        TOPS_CHECK(topsFree(A));
         return result;
     }
 
     result = AllocateMatrix(&C_cutlass, M, N, 101);
 
     if (result != topsSuccess) {
-        topsFree(A);
-        topsFree(B);
+        TOPS_CHECK(topsFree(A));
+        TOPS_CHECK(topsFree(B));
         return result;
     }
 
     result = AllocateMatrix(&C_reference, M, N, 101);
 
     if (result != topsSuccess) {
-        topsFree(A);
-        topsFree(B);
-        topsFree(C_cutlass);
+        TOPS_CHECK(topsFree(A));
+        TOPS_CHECK(topsFree(B));
+        TOPS_CHECK(topsFree(C_cutlass));
         return result;
     }
 
@@ -151,10 +218,10 @@ topsError_t TestToptlassGemm(int M,int N,int K,float alpha,float beta){
         std::cerr << "Failed to copy C_cutlass matrix to C_reference: "
         << topsGetErrorString(result) << std::endl;
 
-        topsFree(C_reference);
-        topsFree(C_cutlass);
-        topsFree(B);
-        topsFree(A);
+        TOPS_CHECK(topsFree(C_reference));
+        TOPS_CHECK(topsFree(C_cutlass));
+        TOPS_CHECK(topsFree(B));
+        TOPS_CHECK(topsFree(A));
 
         return result;
     }
@@ -164,7 +231,7 @@ topsError_t TestToptlassGemm(int M,int N,int K,float alpha,float beta){
 }
 
 int main(int argc,const char *arg[]){
-    int problem[3] = {128,128,128};
+    int problem[3] = {16,16,16};
 
     for (int i = 1;i<argc && i < 4;++i){
         std::stringstream ss(arg[i]);

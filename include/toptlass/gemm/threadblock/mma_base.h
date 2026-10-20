@@ -5,9 +5,9 @@
 #pragma once
 
 #include "toptlass/tensor_ref.h"
-#include "toptlass/aligned_buffer.h"
-#include "toptlass/arch/memory.h"
-#include "toptlass/array.h"
+// #include "toptlass/aligned_buffer.h"
+// #include "toptlass/arch/memory.h"
+// #include "toptlass/array.h"
 #include "toptlass/toptlass.h"
 #include "toptlass/gemm/gemm.h"
 #include "toptlass/matrix_shape.h"

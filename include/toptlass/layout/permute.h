@@ -9,6 +9,7 @@ namespace toptlass {
 namespace layout {
 
 class PermuteBase {
+public:
     using Index = int32_t;
     using LongIndex = int64_t;
 };

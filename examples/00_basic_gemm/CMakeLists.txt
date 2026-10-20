@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.22)
-project(topscctest)
+# cmake_minimum_required(VERSION 3.22)
+# project(topscctest)
 
 
 
@@ -56,7 +56,7 @@ if(STATIC_LINK)
 else()
 	list(APPEND CAPS_LIBRARIES topspti_rt topspti_prof)
 endif()
-
+message(STATUS "TOPTLASS_INCLUDE_DIR=${TOPTLASS_INCLUDE_DIR}")
 unset(_target_files)
 foreach(_src_file ${_src_files})
 	get_filename_component(_src_file_name ${_src_file} NAME)
@@ -64,5 +64,10 @@ foreach(_src_file ${_src_files})
 	string(REPLACE ".cpp" "" _target_name ${_target_name})
 	add_executable(${_target_name} ${_src_file})
 	list(APPEND _target_files ${_target_name})
-	target_link_libraries(${_target_name} ${CAPS_LIBRARIES})
+	target_compile_options(${_target_name} PRIVATE -Wno-reorder)
+	target_link_libraries(${_target_name}
+								PRIVATE
+								TOPTLASS)
+	target_compile_options(${_target_name} PRIVATE -Wno-unused-variable)
+	target_link_libraries(${_target_name} PRIVATE ${CAPS_LIBRARIES})
 endforeach()

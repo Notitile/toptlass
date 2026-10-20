@@ -24,7 +24,7 @@ template <
     typename ElementC,
     typename ElementAccumulator>
 struct DefaultGemmConfiguration<
-    arch::OpClassSimit,
+    arch::OpClassSimt,
     ArchTag,
     ElementA,
     ElementB,
@@ -33,9 +33,9 @@ struct DefaultGemmConfiguration<
     
     static int const kAlignmentA = 1;
     static int const kAlignmentB = 1;
-    using ThreadblockShape = GemmShape<128,128,8>;
-    using WarpShape = GemmShape<32,64,8>;
-    using InstructionShape = GemmShape<1,1,1?;
+    using ThreadblockShape = GemmShape<64,64,8>;
+    using WarpShape = GemmShape<2,4,8>;
+    using InstructionShape = GemmShape<1,1,1>;
     static int const kStages = 2;
      
     using Operator = arch::OpMultiplyAdd;

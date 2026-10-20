@@ -2,6 +2,9 @@
 
 #include "toptlass/gemm/gemm_enumerated_types.h"
 #include "toptlass/layout/permute.h"
+#include "toptlass/layout/matrix.h"
+#include "toptlass/arch/mma.h"
+#include "toptlass/gemm/threadblock/default_mma.h"
 
 namespace toptlass {
 namespace gemm {
@@ -93,7 +96,7 @@ template <
     /// Warp-level tile size (concept: GemmShape)
     typename WarpShape,
     /// Epilogue output operator
-    typename EpilogueOutputOp,
+    // typename EpilogueOutputOp,
     /// Threadblock-level swizzling operator
     typename ThreadblockSwizzle,
     /// If true, kernel is configured to support serial reduction in the epilogue
@@ -130,7 +133,6 @@ struct DefaultGemm<
     ThreadblockShape,
     WarpShape,
     GemmShape<1, 1, 1>,
-    // EpilogueOutputOp,
     ThreadblockSwizzle,
     2,
     SplitKSerial,
@@ -144,13 +146,12 @@ struct DefaultGemm<
     PermuteBLayout,
     typename std::enable_if< ! std::is_same<ArchTag, arch::Gcu300>::value >::type > {
 
-        static_assert((std::is_same<LayoutC, layout::RowMajor>::value
-             || std::is_same<LayoutC, layout::AffineRankN<2>>::value),
-             "Epilogue in the kernel level must be row major");
+        // static_assert((std::is_same<LayoutC, layout::RowMajor>::value
+        //      || std::is_same<LayoutC, layout::AffineRankN<2>>::value),
+        //      "Epilogue in the kernel level must be row major");
 
         /// Define the threadblock-scoped matrix multiply-accumulate
-        using Mma = typename toptlass::gemm::threadblock::DefaultMma<
-            ElementA,
+        using Mma = typename toptlass::gemm::threadblock::DefaultMma<ElementA,
             LayoutA,
             kAlignmentA,
             ElementB,
@@ -159,7 +160,7 @@ struct DefaultGemm<
             ElementAccumulator,
             LayoutC,
             arch::OpClassSimt,
-            arch::Sm50,
+            arch::Gcu300,
             ThreadblockShape,
             WarpShape,
             GemmShape<1, 1, 1>,

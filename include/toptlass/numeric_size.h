@@ -4,7 +4,7 @@ namespace toptlass {
 
 template <typename T>
 struct sizeof_bits {
-static constexpr int value int(sizeof(T)*8);
+static constexpr int value = int(sizeof(T)*8);
 };
 
 }

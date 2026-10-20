@@ -1,6 +1,7 @@
 #pragma once
 
 #include "toptlass/toptlass.h"
+#include "toptlass/gemm/gemm.h"
 
 namespace toptlass{
 namespace gemm{
@@ -10,7 +11,7 @@ template <int N=1>
 struct GemmIdentityThreadblockSwizzle {
 
     TOPTLASS_HOST_DEVICE
-    GemmIdentityThradblockSwizzle(){ }
+    GemmIdentityThreadblockSwizzle(){ }
 
     TOPTLASS_HOST_DEVICE
     static GemmCoord get_tiled_shape(

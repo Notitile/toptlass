@@ -3,9 +3,14 @@
 namespace toptlass{
 namespace arch {
 
-struct OpClassSimit {};
+struct OpClassSimt {};
 
 struct OpMultiplyAdd {};
+
+struct OpClassTensorOp {};
     
+struct OpMultiplyAddSaturate {};
+
+
 }
 }

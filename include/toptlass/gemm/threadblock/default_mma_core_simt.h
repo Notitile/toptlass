@@ -4,6 +4,7 @@
 #include "toptlass/gemm/warp/mma.h"
 #include "toptlass/arch/mma.h"
 #include "toptlass/layout/matrix.h"
+#include "toptlass/gemm/threadblock/default_mma_core.h"
 
 namespace toptlass {
 namespace gemm {
@@ -67,7 +68,7 @@ struct DefaultMmaCore<Shape_, WarpShape_, GemmShape<1, 1, 1>, ElementA_,
 
     using WarpCount = GemmShape<
                         Shape::kM / WarpShape::kM,
-                        Shape::kN / WarpShape::kN
+                        Shape::kN / WarpShape::kN,
                         PartitionsK>;
 
     static int const kWarpSize = warp::WarpSize<arch::OpClassSimt>::value;    

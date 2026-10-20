@@ -1,0 +1,40 @@
+cmake_minimum_required(VERSION 3.19 FATAL_ERROR)
+cmake_policy(SET CMP0112 NEW)
+
+
+project(TOPTLASS LANGUAGES CXX)
+
+
+include(GNUInstallDirs)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+set(TOPTLASS_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include CACHE PATH "TOPTLASS Header Library")
+include_directories(${TOPTLASS_INCLUDE_DIR})
+
+add_library(TOPTLASS INTERFACE)
+
+
+target_include_directories(
+  TOPTLASS
+  INTERFACE
+  $<INSTALL_INTERFACE:include>
+  $<BUILD_INTERFACE:${TOPTLASS_INCLUDE_DIR}>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+  )
+
+install(
+  DIRECTORY
+  ${TOPTLASS_INCLUDE_DIR}/
+  ${CMAKE_CURRENT_BINARY_DIR}/include/
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  )
+
+install(
+  TARGETS TOPTLASS
+#   EXPORT NvidiaCutlass
+  PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+add_subdirectory(examples/00_basic_gemm)

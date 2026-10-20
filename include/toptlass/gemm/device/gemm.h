@@ -7,6 +7,8 @@
 #include "toptlass/toptlass.h"
 #include "toptlass/numeric_types.h"
 #include "toptlass/arch/arch.h"
+#include "toptlass/arch/mma.h"
+#include "toptlass/tensor_ref.h"
 #include "toptlass/device_kernel.h"
 
 #include "toptlass/gemm/threadblock/threadblock_swizzle.h"
@@ -225,10 +227,10 @@ class Gemm {
   static int const kStages = Stages;
   static int const kAlignmentA = AlignmentA;
   static int const kAlignmentB = AlignmentB;
-  static int const kAlignmentC = EpilogueOutputOp::kCount;
+  // static int const kAlignmentC = EpilogueOutputOp::kCount;
   static bool const kSplitKSerial = SplitKSerial;
-  static ComplexTransform const kTransformA = ComplexTransform::kNone;
-  static ComplexTransform const kTransformB = ComplexTransform::kNone;
+  // static ComplexTransform const kTransformA = ComplexTransform::kNone;
+  // static ComplexTransform const kTransformB = ComplexTransform::kNone;
 
   /// Define the kernel
   using GemmKernel = typename kernel::DefaultGemm<
@@ -282,13 +284,13 @@ class Gemm {
     //
 
     /// Default ctor
-    CUTLASS_HOST_DEVICE
+    TOPTLASS_HOST_DEVICE
     Arguments(): problem_size(0, 0, 0), split_k_slices(1) {
 
     }
 
     /// Constructs an Arguments structure 
-    CUTLASS_HOST_DEVICE
+    TOPTLASS_HOST_DEVICE
     Arguments(
       GemmCoord problem_size_,
       TensorRef<ElementA const, LayoutA> ref_A_,
@@ -370,7 +372,7 @@ public:
   }
 
   /// Initializes GEMM state from arguments.
-  Status initialize(Arguments const &args, void *workspace = nullptr, cudaStream_t stream = nullptr) {
+  Status initialize(Arguments const &args, void *workspace = nullptr, topsStream_t stream = nullptr) {
 
     // Determine grid shape
     ThreadblockSwizzle threadblock_swizzle;
@@ -388,9 +390,9 @@ public:
 
         size_t bytes = get_workspace_size(args);
       
-        cudaError_t result = cudaMemsetAsync(workspace, 0, bytes, stream);
+        topsError_t result = topsMemsetAsync(workspace, 0, bytes, stream);
 
-        if (result != cudaSuccess) {
+        if (result != topsSuccess) {
           return Status::kErrorInternal;
         }
       }
@@ -408,8 +410,8 @@ public:
       grid_shape,
       args.ref_A.non_const_ref(),
       args.ref_B.non_const_ref(),
-      args.ref_C.non_const_ref(),
-      args.ref_D,
+      // args.ref_C.non_const_ref(),
+      // args.ref_D,
     //   args.epilogue,
       static_cast<int *>(workspace),
       args.gather_A_indices,
@@ -440,37 +442,37 @@ public:
   }
 
   /// Runs the kernel using initialized state.
-  Status run(cudaStream_t stream = nullptr) {
+  Status run(topsStream_t stream = nullptr) {
 
     ThreadblockSwizzle threadblock_swizzle;
 
     dim3 grid = threadblock_swizzle.get_grid_shape(params_.grid_tiled_shape);
     dim3 block(GemmKernel::kThreadCount, 1, 1);
 
-    cudaError_t result;
+    topsError_t result;
 
     int smem_size = int(sizeof(typename GemmKernel::SharedStorage));
 
-    if (smem_size >= (48 << 10)) {
-      result = cudaFuncSetAttribute(Kernel<GemmKernel>,
-                                    cudaFuncAttributeMaxDynamicSharedMemorySize,
-                                    smem_size);
+    // if (smem_size >= (48 << 10)) {
+    //   result = cudaFuncSetAttribute(Kernel<GemmKernel>,
+    //                                 cudaFuncAttributeMaxDynamicSharedMemorySize,
+    //                                 smem_size);
 
-      if (result != cudaSuccess) {
-        return Status::kErrorInternal;
-      }
-    }
+    //   if (result != cudaSuccess) {
+    //     return Status::kErrorInternal;
+    //   }
+    // }
 
-    toptlass::arch::synclog_setup();
+    // toptlass::arch::synclog_setup();
     toptlass::Kernel<GemmKernel><<<grid, block, smem_size, stream>>>(params_);
 
-    result = cudaGetLastError();
+    result = topsGetLastError();
 
-    return result == cudaSuccess ? Status::kSuccess : Status::kErrorInternal;
+    return result == topsSuccess ? Status::kSuccess : Status::kErrorInternal;
   }
 
   /// Runs the kernel using initialized state.
-  Status operator()(cudaStream_t stream = nullptr) {
+  Status operator()(topsStream_t stream = nullptr) {
     return run(stream);
   }
 
@@ -478,7 +480,7 @@ public:
   Status operator()(
     Arguments const &args, 
     void *workspace = nullptr, 
-    cudaStream_t stream = nullptr) {
+    topsStream_t stream = nullptr) {
     
     Status status = initialize(args, workspace, stream);
     
@@ -570,8 +572,8 @@ class Gemm<ElementA_, LayoutA_, ElementB_, LayoutB_, ElementC_,
   static int const kStages = Stages;
   static int const kAlignmentA = AlignmentA;
   static int const kAlignmentB = AlignmentB;
-  static ComplexTransform const kTransformA = ComplexTransform::kNone;
-  static ComplexTransform const kTransformB = ComplexTransform::kNone;
+  // static ComplexTransform const kTransformA = ComplexTransform::kNone;
+  // static ComplexTransform const kTransformB = ComplexTransform::kNone;
   static bool const kSplitKSerial = SplitKSerial;
 
   using UnderlyingOperator = Gemm< 
@@ -602,7 +604,7 @@ class Gemm<ElementA_, LayoutA_, ElementB_, LayoutB_, ElementC_,
 
   using UnderlyingArguments = typename UnderlyingOperator::Arguments;
   using GemmKernel = typename UnderlyingOperator::GemmKernel;
-  static int const kAlignmentC = UnderlyingOperator::kAlignmentC;
+  // static int const kAlignmentC = UnderlyingOperator::kAlignmentC;
 
   /// Argument structure
   struct Arguments {

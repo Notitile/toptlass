@@ -8,7 +8,7 @@
 
 #include "toptlass/gemm/gemm.h"
 #include "toptlass/matrix_coord.h"
-#include "toptlass/semaphore.h"
+// #include "toptlass/semaphore.h"
 #include "toptlass/arch/arch.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -118,54 +118,54 @@ struct Gemm {
   Gemm() { } 
 
   /// Determines whether kernel satisfies alignment
-  TOPTLASS_HOST_DEVICE
-  static Status can_implement(
-    toptlass::gemm::GemmCoord const & problem_size,
-    typename Mma::IteratorA::TensorRef ref_A,
-    typename Mma::IteratorB::TensorRef ref_B,
-    // typename Epilogue::OutputTileIterator::TensorRef ref_C,
-    // typename Epilogue::OutputTileIterator::TensorRef ref_D) {
+  // TOPTLASS_HOST_DEVICE
+  // static Status can_implement(
+  //   toptlass::gemm::GemmCoord const & problem_size,
+  //   typename Mma::IteratorA::TensorRef ref_A,
+  //   typename Mma::IteratorB::TensorRef ref_B,
+  //   // typename Epilogue::OutputTileIterator::TensorRef ref_C,
+  //   // typename Epilogue::OutputTileIterator::TensorRef ref_D) {
 
-    static int const kAlignmentA = (std::is_same<typename Mma::IteratorA::Layout,
-                                                      layout::ColumnMajorInterleaved<32>>::value)
-                                   ? 32
-                                   : (std::is_same<typename Mma::IteratorA::Layout,
-                                                        layout::ColumnMajorInterleaved<64>>::value)
-                                     ? 64
-                                     : Mma::IteratorA::AccessType::kElements;
-    static int const kAlignmentB =  (std::is_same<typename Mma::IteratorB::Layout,
-                                                       layout::RowMajorInterleaved<32>>::value)
-                                   ? 32
-                                   : (std::is_same<typename Mma::IteratorB::Layout,
-                                                        layout::RowMajorInterleaved<64>>::value)
-                                     ? 64
-                                     : Mma::IteratorB::AccessType::kElements;
-    // static int const kAlignmentC = (std::is_same<typename Epilogue::OutputTileIterator::Layout,
-    //                                                   layout::ColumnMajorInterleaved<32>>::value)
-    //                                ? 32
-    //                                : (std::is_same<typename Epilogue::OutputTileIterator::Layout,
-    //                                                     layout::ColumnMajorInterleaved<64>>::value)
-    //                                  ? 64
-    //                                  : Epilogue::OutputTileIterator::kElementsPerAccess;
+  //   static int const kAlignmentA = (std::is_same<typename Mma::IteratorA::Layout,
+  //                                                     layout::ColumnMajorInterleaved<32>>::value)
+  //                                  ? 32
+  //                                  : (std::is_same<typename Mma::IteratorA::Layout,
+  //                                                       layout::ColumnMajorInterleaved<64>>::value)
+  //                                    ? 64
+  //                                    : Mma::IteratorA::AccessType::kElements;
+  //   static int const kAlignmentB =  (std::is_same<typename Mma::IteratorB::Layout,
+  //                                                      layout::RowMajorInterleaved<32>>::value)
+  //                                  ? 32
+  //                                  : (std::is_same<typename Mma::IteratorB::Layout,
+  //                                                       layout::RowMajorInterleaved<64>>::value)
+  //                                    ? 64
+  //                                    : Mma::IteratorB::AccessType::kElements;
+  //   // static int const kAlignmentC = (std::is_same<typename Epilogue::OutputTileIterator::Layout,
+  //   //                                                   layout::ColumnMajorInterleaved<32>>::value)
+  //   //                                ? 32
+  //   //                                : (std::is_same<typename Epilogue::OutputTileIterator::Layout,
+  //   //                                                     layout::ColumnMajorInterleaved<64>>::value)
+  //   //                                  ? 64
+  //   //                                  : Epilogue::OutputTileIterator::kElementsPerAccess;
 
-    if (!TensorRef_aligned(ref_A, kAlignmentA)) {
-      return Status::kErrorMisalignedOperand;
-    }
+  //   if (!TensorRef_aligned(ref_A, kAlignmentA)) {
+  //     return Status::kErrorMisalignedOperand;
+  //   }
 
-    if (!TensorRef_aligned(ref_B, kAlignmentB)) {
-      return Status::kErrorMisalignedOperand;
-    }
+  //   if (!TensorRef_aligned(ref_B, kAlignmentB)) {
+  //     return Status::kErrorMisalignedOperand;
+  //   }
 
-    // if (!TensorRef_aligned(ref_C, kAlignmentC)) {
-    //   return Status::kErrorMisalignedOperand;
-    // }
+  //   // if (!TensorRef_aligned(ref_C, kAlignmentC)) {
+  //   //   return Status::kErrorMisalignedOperand;
+  //   // }
 
-    // if (!TensorRef_aligned(ref_D, kAlignmentC)) {
-    //   return Status::kErrorMisalignedOperand;
-    // }
+  //   // if (!TensorRef_aligned(ref_D, kAlignmentC)) {
+  //   //   return Status::kErrorMisalignedOperand;
+  //   // }
 
-    return Status::kSuccess;
-  }
+  //   return Status::kSuccess;
+  // }
 
   /// Executes one GEMM
   TOPTLASS_DEVICE

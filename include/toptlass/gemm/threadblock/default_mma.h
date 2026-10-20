@@ -2,6 +2,9 @@
 
 #include "toptlass/gemm/gemm_enumerated_types.h"
 #include "toptlass/layout/permute.h"
+#include "toptlass/gemm/threadblock/default_mma_core_simt.h"
+#include "toptlass/gemm/threadblock/mma_pipelined.h"
+#include "toptlass/gemm/threadblock/predicated_tile_iterator.h"
 
 namespace toptlass {
 namespace gemm {
@@ -96,9 +99,9 @@ struct DefaultMma<ElementA, LayoutA, kAlignmentA, ElementB, LayoutB,
                   arch::OpClassSimt, ArchTag, ThreadblockShape, WarpShape,
                   InstructionShape, 2, Operator, false, SharedMemoryClearOption::kNone,
                   GatherA, GatherB, PermuteALayout, PermuteBLayout> {
-    static_assert(platform::is_same<LayoutC, layout::RowMajor>::value
-             || platform::is_same<LayoutC, layout::AffineRankN<2>>::value,
-             "simt epilogue must be row major");
+    // static_assert(std::is_same<LayoutC, layout::RowMajor>::value
+    //          || std::is_same<LayoutC, layout::AffineRankN<2>>::value,
+    //          "simt epilogue must be row major");
 
     // Define the MmaCore components
     using MmaCore = typename toptlass::gemm::threadblock::DefaultMmaCore<
