@@ -350,6 +350,18 @@ struct global_load<AccessType,
   }
 };
 
+template <typename AccessType>
+struct global_load<AccessType,
+                   128,
+                   CacheOperation::Always
+                  > {
+  CUTLASS_DEVICE
+  global_load(AccessType &D, void const *ptr, bool pred_guard) {
+    if (pred_guard) D = *(reinterpret_cast<AccessType const *>(ptr));
+  }
+};
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <

@@ -86,17 +86,26 @@ struct PitchLinearStripminedThreadMap {
   /// Internal implementation details
   struct Detail {
 
-    static_assert(!(Shape::kContiguous % kElementsPerAccess), "");
+    // static_assert(!(Shape::kContiguous % kElementsPerAccess), "");
 
     /// Shape of the tile in units of vectors
-    using ShapeVec = layout::PitchLinearShape<
-      Shape::kContiguous / kElementsPerAccess,
-      Shape::kStrided
-    >;
+    using ShapeVec = typename platform::conditional<
+        Shape::kContiguous >=kElementsPerAccess,
+        layout::PitchLinearShape<
+          Shape::kContiguous / kElementsPerAccess,
+          Shape::kStrided
+          >,
+        layout::PitchLinearShape<
+          1,
+          Shape::kContiguous * Shape::kStrided / kElementsPerAccess>>::type;
+    // layout::PitchLinearShape<
+    //   Shape::kContiguous / kElementsPerAccess,
+    //   Shape::kStrided
+    // >;
 
-    static_assert((Threads < ShapeVec::kContiguous && !(ShapeVec::kContiguous % kThreads)) ||
-                      (!(kThreads % ShapeVec::kContiguous)),
-                  "Shape must be divisible by number of iterations of each thread.");
+    // static_assert((Threads < ShapeVec::kContiguous && !(ShapeVec::kContiguous % kThreads)) ||
+    //                   (!(kThreads % ShapeVec::kContiguous)),
+    //               "Shape must be divisible by number of iterations of each thread.");
   };
 
   /// Number of iterations by each thread
@@ -104,12 +113,7 @@ struct PitchLinearStripminedThreadMap {
       Threads >= Detail::ShapeVec::kContiguous,
       layout::PitchLinearShape<
           1,
-          // Redo the comparison here to work around divide by zero compiler
-          // error.  The compiler evaluates both path of platform::conditional.
-          (Threads >= Detail::ShapeVec::kContiguous
-               ? (Detail::ShapeVec::kStrided + (kThreads / Detail::ShapeVec::kContiguous - 1)) /
-                     (kThreads / Detail::ShapeVec::kContiguous)
-               : 0)>,
+          Detail::ShapeVec::kContiguous * Detail::ShapeVec::kStrided / Threads>,
       layout::PitchLinearShape<Detail::ShapeVec::kContiguous / kThreads,
                                Detail::ShapeVec::kStrided>>::type;
   
@@ -599,7 +603,7 @@ struct TransposePitchLinearThreadMapSimt {
     /// Extract vector length from Layout
     static int const kElementsPerAccess = ThreadMap::kElementsPerAccess;
 
-    static_assert(kElementsPerAccess == 1 , "Simt transpose requires elements per access to be 1");
+    // static_assert(kElementsPerAccess == 1 , "Simt transpose requires elements per access to be 1");
     ///< Iterations along each dimension (concept: PitchLinearShape)
     using Iterations =
         layout::PitchLinearShape<ThreadMap::Iterations::kStrided,

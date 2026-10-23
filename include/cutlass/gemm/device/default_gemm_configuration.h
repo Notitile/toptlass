@@ -64,6 +64,8 @@ struct DefaultGemmConfiguration;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+
+
 template <
   typename ArchTag,
   typename ElementA, 
@@ -94,6 +96,39 @@ struct DefaultGemmConfiguration<
 
   using Operator = arch::OpMultiplyAdd;
 };
+
+
+template <
+  typename ElementA, 
+  typename ElementB, 
+  typename ElementC, 
+  typename ElementAccumulator>
+struct DefaultGemmConfiguration<
+  arch::OpClassSimt, 
+  arch::Gcu300,
+  ElementA, 
+  ElementB, 
+  ElementC, 
+  ElementAccumulator> {
+  
+  static int const kAlignmentA = 32;
+  static int const kAlignmentB = 32;
+  using ThreadblockShape = GemmShape<64, 64, 8>;
+  using WarpShape = GemmShape<16, 32, 8>;
+  using InstructionShape = GemmShape<1, 1, 1>;
+  static int const kStages = 2;
+
+  using EpilogueOutputOp = epilogue::thread::LinearCombination<
+    ElementC,
+    1,
+    ElementAccumulator,
+    ElementAccumulator
+  >;
+
+  using Operator = arch::OpMultiplyAdd;
+};
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 

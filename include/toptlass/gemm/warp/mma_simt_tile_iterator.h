@@ -169,7 +169,8 @@ public:
   MmaSimtTileIterator &add_tile_offset(TensorCoord const &coord) {
 
     ref_.add_coord_offset({
-      coord.row() * Shape::kRow / Policy::LaneMmaShape::kM, 
+      // coord.row() * Shape::kRow / Policy::LaneMmaShape::kM, 
+      coord.row() * Shape::kRow,
       coord.column() * Shape::kColumn});
 
     return *this;
@@ -368,7 +369,8 @@ public:
     MatrixCoord lane_offset = lane_layout.inverse(lane_id) * 
       MatrixCoord(Policy::LaneMmaShape::kM, 0);
 
-    origin_ = lane_offset;
+    // origin_ = lane_offset;
+    origin = MatrixCoord(0,0);
 
     ref.add_coord_offset(lane_offset);
 

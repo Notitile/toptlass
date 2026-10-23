@@ -345,15 +345,15 @@ public:
 
             bool guard = row_guard && mask_.predicates[column];
 
-            cutlass::arch::global_load<
-              AccessType,
-              sizeof(AccessType)
-            >(
-                frag_ptr[frag_row_idx * ThreadMap::Iterations::kColumn +
-                         column],
-                (void *)&memory_pointer[column * ThreadMap::Delta::kColumn /
-                                        kElementsPerAccess],
-                guard);
+            // cutlass::arch::global_load<
+            //   AccessType,
+            //   sizeof(AccessType)
+            // >(
+            //     frag_ptr[frag_row_idx * ThreadMap::Iterations::kColumn +
+            //              column],
+            //     (void *)&memory_pointer[column * ThreadMap::Delta::kColumn /
+            //                             kElementsPerAccess],
+            //     guard);
           }
 
           if (row + 1 < ThreadMap::Iterations::kRow) {

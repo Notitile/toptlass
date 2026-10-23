@@ -50,6 +50,11 @@ struct WarpSize {
   static int const value = 32;
 };
 
+template <typename OperatorClass>
+struct GcuSize {
+  static int const value = 1;
+};
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 } // namespace warp

@@ -144,9 +144,13 @@ public:
   /// Thread-level matrix multiply accumulate operator
   using ThreadMma = thread::Mma<
     GemmShape<
-      Shape::kM / Policy::WarpShape::kRow,
-      Shape::kN / Policy::WarpShape::kColumn,
-      Policy::LaneMmaShape::kK>,
+      // Shape::kM / Policy::WarpShape::kRow,
+      // Shape::kN / Policy::WarpShape::kColumn,
+      // Policy::LaneMmaShape::kK
+      Shape::kM,
+      Shape::kN,
+      Shape::kK
+      >,
     ElementA,
     ThreadLayoutA,
     ElementB,
@@ -170,7 +174,8 @@ public:
 
   /// Iterates over the A operand in memory
   using IteratorA = MmaSimtTileIterator<
-    MatrixShape<Shape::kM, Policy::LaneMmaShape::kK>,
+    // MatrixShape<Shape::kM, Policy::LaneMmaShape::kK>,
+    MatrixShape<Shape::kM,Shape::kK>,
     Operand::kA,
     ElementA,
     LayoutA,

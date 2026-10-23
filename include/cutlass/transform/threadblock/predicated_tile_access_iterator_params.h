@@ -233,6 +233,7 @@ struct PredicatedTileAccessIteratorParams {
   /// to first access of next tile
   LongIndex inc_advance_ = 0;
 
+  void* ctx;
   //
   // Methods
   //

@@ -251,13 +251,13 @@ public:
     // The last kblock is loaded in the prolog
 
     // Load A fragment from global A
-    FragmentA tb_frag_A;
+    __local__ FragmentA tb_frag_A;
     tb_frag_A.clear();
     iterator_A.load(tb_frag_A);
     ++iterator_A;
 
     // Load B fragment from global B
-    FragmentB tb_frag_B;
+    __local__ FragmentB tb_frag_B;
     tb_frag_B.clear();
     iterator_B.load(tb_frag_B);
     ++iterator_B;

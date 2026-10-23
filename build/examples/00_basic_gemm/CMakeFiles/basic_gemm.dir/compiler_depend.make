@@ -424,37 +424,18 @@ examples/00_basic_gemm/CMakeFiles/basic_gemm.dir/basic_gemm.cpp.o: ../examples/0
   ../include/cutlass/semaphore.h \
   ../include/cutlass/gemm/kernel/default_gemm.h \
   ../include/cutlass/arch/wmma.h \
-  ../include/cutlass/epilogue/threadblock/epilogue.h \
-  ../include/cutlass/aligned_buffer.h \
-  ../include/cutlass/transform/pitch_linear_thread_map.h \
-  ../include/cutlass/predicate_vector.h \
-  ../include/cutlass/transform/threadblock/regular_tile_iterator.h \
-  ../include/cutlass/epilogue/threadblock/epilogue_base.h \
-  ../include/cutlass/epilogue/threadblock/epilogue_base_streamk.h \
-  ../include/cutlass/block_striped.h \
-  ../include/cutlass/wmma_array.h \
-  ../include/cutlass/epilogue/threadblock/predicated_tile_iterator.h \
+  ../include/cutlass/gemm/threadblock/default_mma.h \
   ../include/cutlass/layout/permute.h \
-  ../include/cutlass/epilogue/threadblock/output_tile_thread_map.h \
+  ../include/cutlass/transform/threadblock/predicated_tile_iterator.h \
   ../include/cutlass/arch/memory.h \
   ../include/cutlass/arch/cache_operation.h \
-  ../include/cutlass/epilogue/threadblock/predicated_tile_iterator_params.h \
-  ../include/cutlass/epilogue/thread/linear_combination.h \
-  ../include/cutlass/numeric_conversion.h \
-  /usr/include/c++/12/cfenv \
-  /usr/include/c++/12/fenv.h \
-  /usr/include/fenv.h \
-  /usr/include/x86_64-linux-gnu/bits/fenv.h \
-  ../include/cutlass/transform/thread/unary_op.h \
-  ../include/cutlass/epilogue/thread/scale_type.h \
-  ../include/cutlass/epilogue/thread/linear_combination_params.h \
-  ../include/cutlass/gemm/kernel/gemm_pipelined.h \
-  ../include/cutlass/gemm/threadblock/default_mma.h \
-  ../include/cutlass/transform/threadblock/predicated_tile_iterator.h \
   ../include/cutlass/transform/threadblock/predicated_tile_access_iterator.h \
+  ../include/cutlass/predicate_vector.h \
   ../include/cutlass/transform/threadblock/predicated_tile_access_iterator_params.h \
   ../include/cutlass/gemm/threadblock/default_mma_core_simt.h \
+  ../include/cutlass/transform/pitch_linear_thread_map.h \
   ../include/cutlass/transform/threadblock/regular_tile_iterator_pitch_linear.h \
+  ../include/cutlass/transform/threadblock/regular_tile_iterator.h \
   ../include/cutlass/transform/threadblock/regular_tile_iterator_pitch_linear_2dthreadtile.h \
   ../include/cutlass/gemm/warp/mma_simt_policy.h \
   ../include/cutlass/gemm/warp/mma_simt.h \
@@ -471,10 +452,20 @@ examples/00_basic_gemm/CMakeFiles/basic_gemm.dir/basic_gemm.cpp.o: ../examples/0
   ../include/cutlass/gemm/warp/mma_simt_tile_iterator.h \
   ../include/cutlass/gemm/threadblock/default_mma_core.h \
   ../include/cutlass/gemm/threadblock/mma_pipelined.h \
+  ../include/cutlass/aligned_buffer.h \
+  ../include/cutlass/numeric_conversion.h \
+  /usr/include/c++/12/cfenv \
+  /usr/include/c++/12/fenv.h \
+  /usr/include/fenv.h \
+  /usr/include/x86_64-linux-gnu/bits/fenv.h \
+  ../include/cutlass/transform/thread/unary_op.h \
   ../include/cutlass/gemm/threadblock/mma_base.h \
   ../include/cutlass/gemm/threadblock/mma_singlestage.h \
   ../include/cutlass/gemm/threadblock/mma_multistage.h \
   ../include/cutlass/epilogue/threadblock/default_epilogue_simt.h \
+  ../include/cutlass/epilogue/thread/linear_combination.h \
+  ../include/cutlass/epilogue/thread/scale_type.h \
+  ../include/cutlass/epilogue/thread/linear_combination_params.h \
   ../include/cutlass/epilogue/thread/linear_combination_clamp.h \
   ../include/cutlass/epilogue/thread/linear_combination_relu.h \
   ../include/cutlass/epilogue/thread/activation.h \
@@ -490,12 +481,20 @@ examples/00_basic_gemm/CMakeFiles/basic_gemm.dir/basic_gemm.cpp.o: ../examples/0
   ../include/cutlass/epilogue/warp/simt_policy.h \
   ../include/cutlass/epilogue/warp/tile_iterator_simt.h \
   ../include/cutlass/epilogue/threadblock/default_thread_map_simt.h \
+  ../include/cutlass/epilogue/threadblock/predicated_tile_iterator.h \
+  ../include/cutlass/epilogue/threadblock/output_tile_thread_map.h \
+  ../include/cutlass/epilogue/threadblock/predicated_tile_iterator_params.h \
   ../include/cutlass/epilogue/threadblock/predicated_tile_iterator_conv.h \
   ../include/cutlass/epilogue/threadblock/predicated_tile_iterator_strided_dgrad.h \
   ../include/cutlass/epilogue/threadblock/predicated_tile_iterator_affine.h \
   ../include/cutlass/epilogue/threadblock/predicated_tile_iterator_direct_conv.h \
   ../include/cutlass/epilogue/threadblock/shared_load_iterator.h \
   ../include/cutlass/epilogue/threadblock/shared_load_iterator_pitch_linear.h \
+  ../include/cutlass/epilogue/threadblock/epilogue.h \
+  ../include/cutlass/epilogue/threadblock/epilogue_base.h \
+  ../include/cutlass/epilogue/threadblock/epilogue_base_streamk.h \
+  ../include/cutlass/block_striped.h \
+  ../include/cutlass/wmma_array.h \
   ../include/cutlass/epilogue/threadblock/epilogue_depthwise.h \
   ../include/cutlass/gemm/device/default_gemm_configuration.h
 
@@ -504,11 +503,15 @@ examples/00_basic_gemm/CMakeFiles/basic_gemm.dir/basic_gemm.cpp.o: ../examples/0
 
 ../include/cutlass/epilogue/threadblock/epilogue_depthwise.h:
 
+../include/cutlass/epilogue/threadblock/epilogue.h:
+
 ../include/cutlass/epilogue/threadblock/shared_load_iterator.h:
 
 ../include/cutlass/epilogue/threadblock/predicated_tile_iterator_affine.h:
 
 ../include/cutlass/epilogue/threadblock/predicated_tile_iterator_strided_dgrad.h:
+
+../include/cutlass/epilogue/threadblock/output_tile_thread_map.h:
 
 ../include/cutlass/epilogue/warp/simt_policy.h:
 
@@ -520,6 +523,14 @@ examples/00_basic_gemm/CMakeFiles/basic_gemm.dir/basic_gemm.cpp.o: ../examples/0
 
 ../include/cutlass/epilogue/thread/linear_combination_clamp.h:
 
+../include/cutlass/epilogue/thread/linear_combination_params.h:
+
+../include/cutlass/epilogue/threadblock/epilogue_base.h:
+
+../include/cutlass/epilogue/thread/scale_type.h:
+
+../include/cutlass/epilogue/thread/linear_combination.h:
+
 ../include/cutlass/epilogue/threadblock/default_epilogue_simt.h:
 
 ../include/cutlass/gemm/threadblock/mma_singlestage.h:
@@ -527,6 +538,10 @@ examples/00_basic_gemm/CMakeFiles/basic_gemm.dir/basic_gemm.cpp.o: ../examples/0
 ../include/cutlass/epilogue/thread/linear_combination_planar_complex.h:
 
 ../include/cutlass/gemm/threadblock/mma_base.h:
+
+../include/cutlass/transform/thread/unary_op.h:
+
+../include/cutlass/aligned_buffer.h:
 
 ../include/cutlass/gemm/warp/mma_simt_tile_iterator.h:
 
@@ -536,35 +551,19 @@ examples/00_basic_gemm/CMakeFiles/basic_gemm.dir/basic_gemm.cpp.o: ../examples/0
 
 ../include/cutlass/gemm/warp/mma_simt_policy.h:
 
-../include/cutlass/gemm/threadblock/default_mma.h:
+../include/cutlass/transform/threadblock/regular_tile_iterator.h:
 
-../include/cutlass/epilogue/thread/linear_combination_params.h:
+../include/cutlass/epilogue/threadblock/predicated_tile_iterator.h:
 
-../include/cutlass/transform/thread/unary_op.h:
+../include/cutlass/transform/threadblock/predicated_tile_access_iterator_params.h:
 
-../include/cutlass/epilogue/thread/linear_combination.h:
+../include/cutlass/predicate_vector.h:
 
 ../include/cutlass/arch/cache_operation.h:
 
 ../include/cutlass/arch/memory.h:
 
-../include/cutlass/epilogue/threadblock/output_tile_thread_map.h:
-
-../include/cutlass/transform/threadblock/predicated_tile_access_iterator_params.h:
-
-../include/cutlass/epilogue/threadblock/predicated_tile_iterator.h:
-
-../include/cutlass/epilogue/thread/scale_type.h:
-
-../include/cutlass/epilogue/threadblock/epilogue_base.h:
-
-../include/cutlass/transform/threadblock/regular_tile_iterator.h:
-
-../include/cutlass/predicate_vector.h:
-
-../include/cutlass/aligned_buffer.h:
-
-../include/cutlass/epilogue/threadblock/epilogue.h:
+../include/cutlass/gemm/threadblock/default_mma.h:
 
 ../include/cutlass/arch/wmma.h:
 
@@ -1257,8 +1256,6 @@ examples/00_basic_gemm/CMakeFiles/basic_gemm.dir/basic_gemm.cpp.o: ../examples/0
 /opt/tops/include/tops/tops_runtime_api.h:
 
 /usr/include/c++/12/bits/locale_classes.h:
-
-../include/cutlass/gemm/kernel/gemm_pipelined.h:
 
 /usr/include/c++/12/bits/allocator.h:
 

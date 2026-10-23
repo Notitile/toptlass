@@ -237,6 +237,9 @@ struct Gemm {
     // Compute position within threadblock
     int thread_idx = threadIdx.x;
 
+    tops_dte_ctx_t ctx;
+    ctx.init();
+    
     // Construct iterators to A and B operands
     typename Mma::IteratorA iterator_A(
       params.params_A,
@@ -256,8 +259,10 @@ struct Gemm {
 
     // Broadcast the warp_id computed by lane 0 to ensure dependent code
     // is compiled as warp-uniform.
-    int warp_idx = canonical_warp_idx_sync();
-    int lane_idx = threadIdx.x % 32;
+    // int warp_idx = canonical_warp_idx_sync();
+    int warp_idx = thread_idx;
+    // int lane_idx = threadIdx.x % 32;
+    int lane_idx = 0;
 
     //
     // Main loop

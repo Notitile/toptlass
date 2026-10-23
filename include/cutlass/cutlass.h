@@ -42,6 +42,9 @@
 
 namespace cutlass {
 
+template<typename T>
+struct PrintType;
+
 /// Status code returned by CUTLASS operations
 enum class Status {
   kSuccess,                    ///< Operation was successful.

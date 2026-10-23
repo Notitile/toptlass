@@ -139,7 +139,8 @@ public:
 
   /// Thread-level shape of a fragment
   using ThreadShape = MatrixShape<
-    Shape::kRow / Policy::WarpShape::kRow,
+    // Shape::kRow / Policy::WarpShape::kRow,
+    Shape::kRow,
     Shape::kColumn
   >;
 
@@ -148,8 +149,10 @@ public:
 
   /// Number of individual loads
   using Iterations = MatrixShape<
-    ThreadShape::kRow / Policy::LaneMmaShape::kM,
-    ThreadShape::kColumn
+    // ThreadShape::kRow / Policy::LaneMmaShape::kM,
+    // ThreadShape::kColumn
+    1,
+    ThreadShape::kRow * ThreadShape::kColumn / 32
   >;
 
   /// Fragment object holding a thread's part of a tile
@@ -241,7 +244,7 @@ public:
         #endif
 
         auto ptr = ref_.data() + ref_.offset({m * Policy::WarpShape::kRow, k}) + pointer_offset / Policy::LaneMmaShape::kM;
-        arch::shared_load(dst_ptr[m + k * Iterations::kRow], ptr);
+        // arch::shared_load(dst_ptr[m + k * Iterations::kRow], ptr);
       }
     }
   }
@@ -349,7 +352,8 @@ public:
 
   /// Thread-level shape of a fragment
   using ThreadShape = MatrixShape<
-    Shape::kRow / Policy::WarpShape::kRow,
+    // Shape::kRow / Policy::WarpShape::kRow,
+    Shape::kRow,
     Shape::kColumn
   >;
 
@@ -358,8 +362,9 @@ public:
 
   /// Number of individual loads (scalar loads)
   using Iterations = MatrixShape<
-    ThreadShape::kRow / Policy::LaneMmaShape::kM,
-    ThreadShape::kColumn
+    // ThreadShape::kRow / Policy::LaneMmaShape::kM,
+    1,
+    ThreadShape::kRow * ThreadShape::kColumn / 32
   >;
 
   /// Fragment object holding a thread's part of a tile
@@ -603,7 +608,8 @@ public:
   /// Thread-level shape of a fragment
   using ThreadShape = MatrixShape<
     Shape::kRow,
-    Shape::kColumn / Policy::WarpShape::kColumn
+    // Shape::kColumn / Policy::WarpShape::kColumn
+    Shape::kColumn
   >;
 
   static_assert(!(ThreadShape::kColumn % Policy::LaneMmaShape::kN), 
@@ -611,8 +617,10 @@ public:
 
   /// Number of individual loads
   using Iterations = MatrixShape<
-    ThreadShape::kRow,
-    ThreadShape::kColumn / Policy::LaneMmaShape::kN
+    // ThreadShape::kRow,
+    // ThreadShape::kColumn / Policy::LaneMmaShape::kN
+    1,
+    ThreadShape::kRow * ThreadShape::kColumn / 32
   >;
 
   /// Fragment object holding a thread's part of a tile
@@ -703,7 +711,7 @@ public:
         #endif
 
         void const *ptr = ref_.data() + ref_.offset({k, n * Policy::WarpShape::kColumn}) + pointer_offset / Policy::LaneMmaShape::kN;
-        arch::shared_load(dst_ptr[n + k * Iterations::kColumn], ptr);
+        // arch::shared_load(dst_ptr[n + k * Iterations::kColumn], ptr);
       }
     }
   }
@@ -813,7 +821,8 @@ public:
   /// Thread-level shape of a fragment
   using ThreadShape = MatrixShape<
     Shape::kRow,
-    Shape::kColumn / Policy::WarpShape::kColumn
+    // Shape::kColumn / Policy::WarpShape::kColumn
+    Shape::kColumn
   >;
 
   static_assert(!(ThreadShape::kColumn % Policy::LaneMmaShape::kN), 
@@ -821,8 +830,10 @@ public:
 
   /// Number of individual loads
   using Iterations = MatrixShape<
-    ThreadShape::kRow,
-    ThreadShape::kColumn / Policy::LaneMmaShape::kN
+    // ThreadShape::kRow,
+    // ThreadShape::kColumn / Policy::LaneMmaShape::kN
+    1,
+    ThreadShape::kRow * ThreadShape::kColumn / 32
   >;
 
   /// Fragment object holding a thread's part of a tile

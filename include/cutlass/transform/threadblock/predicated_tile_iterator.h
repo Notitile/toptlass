@@ -142,6 +142,9 @@ template <
 >
 class PredicatedTileIterator;
 
+template<typename T>
+struct PrintType;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 /// Specialization of PredicatedTileIterator for pitch-linear data.
@@ -323,7 +326,6 @@ class PredicatedTileIterator<Shape_, Element_, layout::PitchLinear, AdvanceRank,
 
   CUTLASS_DEVICE
   void load_with_byte_offset(Fragment &frag, LongIndex byte_offset) {
-
     AccessType *frag_ptr = reinterpret_cast<AccessType *>(&frag);
 
     CUTLASS_PRAGMA_UNROLL
@@ -340,7 +342,6 @@ class PredicatedTileIterator<Shape_, Element_, layout::PitchLinear, AdvanceRank,
           char const *byte_ptr = reinterpret_cast<char const *>(address_iterator_.get()) + byte_offset;
 
           AccessType const *access_ptr = reinterpret_cast<AccessType const *>(byte_ptr);
-
           cutlass::arch::global_load<AccessType,
                                      sizeof(AccessType)
                                     >(
