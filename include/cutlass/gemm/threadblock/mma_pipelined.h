@@ -127,6 +127,8 @@ public:
   /// Obtain the arch tag from the warp-level operator
   using ArchTag = typename Policy::Operator::ArchTag;
 
+  using DteContext_ = DteContext<tops_dte_ctx_t>;
+
   /// Complex transform on A operand
   static ComplexTransform const kTransformA = Operator::kTransformA;
 
@@ -165,6 +167,7 @@ public:
   /// Construct from tensor references
   CUTLASS_DEVICE
   MmaPipelined(
+    DteContext_ &dctx,
     typename Base::SharedStorage &shared_storage,       ///< Shared storage needed for internal use by threadblock-scoped GEMM
     int thread_idx,                                     ///< ID within the threadblock
     int warp_idx,                                       ///< ID of warp
@@ -172,7 +175,7 @@ public:
     TransformA transform_A = TransformA(),              ///< transformation applied to A fragment
     TransformB transform_B = TransformB()               ///< transformation applied to B fragment
   ):
-    Base(shared_storage, thread_idx, warp_idx, lane_idx),
+    Base(dctx,shared_storage, thread_idx, warp_idx, lane_idx),
     smem_iterator_A_(shared_storage.operand_A_ref(), thread_idx),
     smem_iterator_B_(shared_storage.operand_B_ref(), thread_idx),
     transform_A_(transform_A),

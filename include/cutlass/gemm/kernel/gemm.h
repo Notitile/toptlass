@@ -239,9 +239,12 @@ struct Gemm {
 
     tops_dte_ctx_t ctx;
     ctx.init();
+
+    DteContext<tops_dte_ctx_t> dctx(&ctx);
     
     // Construct iterators to A and B operands
     typename Mma::IteratorA iterator_A(
+      dctx,
       params.params_A,
       params.ref_A.data(),
       {params.problem_size.m(), problem_size_k},
@@ -250,6 +253,7 @@ struct Gemm {
       params.gather_A_indices);
 
     typename Mma::IteratorB iterator_B(
+      dctx,
       params.params_B,
       params.ref_B.data(),
       {problem_size_k, params.problem_size.n()},
@@ -269,7 +273,7 @@ struct Gemm {
     //
 
     // Construct thread-scoped matrix multiply
-    Mma mma(shared_storage.main_loop, thread_idx, warp_idx, lane_idx);
+    Mma mma(dctx,shared_storage.main_loop, thread_idx, warp_idx, lane_idx);
 
     typename Mma::FragmentC accumulators;
 
@@ -284,96 +288,96 @@ struct Gemm {
     // Epilogue
     //
 
-    OutputOp output_op(params.output_op);
+    // OutputOp output_op(params.output_op);
 
-    //
-    // Masked tile iterators constructed from members
-    //
+    // //
+    // // Masked tile iterators constructed from members
+    // //
 
-    threadblock_tile_offset =
-        threadblock_swizzle.get_tile_offset(params.swizzle_log_tile);
+    // threadblock_tile_offset =
+    //     threadblock_swizzle.get_tile_offset(params.swizzle_log_tile);
 
-    //assume identity swizzle
-    MatrixCoord threadblock_offset(
-      threadblock_tile_offset.m() * Mma::Shape::kM,
-      threadblock_tile_offset.n() * Mma::Shape::kN
-    );
+    // //assume identity swizzle
+    // MatrixCoord threadblock_offset(
+    //   threadblock_tile_offset.m() * Mma::Shape::kM,
+    //   threadblock_tile_offset.n() * Mma::Shape::kN
+    // );
 
-    int block_idx = threadblock_tile_offset.m() + threadblock_tile_offset.n() * params.grid_tiled_shape.m();
+    // int block_idx = threadblock_tile_offset.m() + threadblock_tile_offset.n() * params.grid_tiled_shape.m();
 
-    // Construct the semaphore.
-    Semaphore semaphore(params.semaphore + block_idx, thread_idx);
+    // // Construct the semaphore.
+    // Semaphore semaphore(params.semaphore + block_idx, thread_idx);
 
-    // If performing a reduction via split-K, fetch the initial synchronization
-    if (kSplitKSerial && params.grid_tiled_shape.k() > 1) {
+    // // If performing a reduction via split-K, fetch the initial synchronization
+    // if (kSplitKSerial && params.grid_tiled_shape.k() > 1) {
       
-      // Fetch the synchronization lock initially but do not block.
-      semaphore.fetch();
+    //   // Fetch the synchronization lock initially but do not block.
+    //   semaphore.fetch();
 
-      // Indicate which position in a serial reduction the output operator is currently updating
-      output_op.set_k_partition(threadblock_tile_offset.k(), params.grid_tiled_shape.k());
-    }
+    //   // Indicate which position in a serial reduction the output operator is currently updating
+    //   output_op.set_k_partition(threadblock_tile_offset.k(), params.grid_tiled_shape.k());
+    // }
 
-    // Tile iterator loading from source tensor.
-    typename Epilogue::OutputTileIterator iterator_C(
-      params.params_C,
-      params.ref_C.data(),
-      params.problem_size.mn(),
-      thread_idx,
-      threadblock_offset,
-      params.scatter_D_indices
-    );
+    // // Tile iterator loading from source tensor.
+    // typename Epilogue::OutputTileIterator iterator_C(
+    //   params.params_C,
+    //   params.ref_C.data(),
+    //   params.problem_size.mn(),
+    //   thread_idx,
+    //   threadblock_offset,
+    //   params.scatter_D_indices
+    // );
 
-    // Tile iterator writing to destination tensor.
-    typename Epilogue::OutputTileIterator iterator_D(
-      params.params_D,
-      params.ref_D.data(),
-      params.problem_size.mn(),
-      thread_idx,
-      threadblock_offset,
-      params.scatter_D_indices
-    );
+    // // Tile iterator writing to destination tensor.
+    // typename Epilogue::OutputTileIterator iterator_D(
+    //   params.params_D,
+    //   params.ref_D.data(),
+    //   params.problem_size.mn(),
+    //   thread_idx,
+    //   threadblock_offset,
+    //   params.scatter_D_indices
+    // );
 
-    Epilogue epilogue(
-      shared_storage.epilogue, 
-      thread_idx, 
-      warp_idx, 
-      lane_idx);
+    // Epilogue epilogue(
+    //   shared_storage.epilogue, 
+    //   thread_idx, 
+    //   warp_idx, 
+    //   lane_idx);
 
-    // Wait on the semaphore - this latency may have been covered by iterator construction
-    if (kSplitKSerial && params.grid_tiled_shape.k() > 1) {
+    // // Wait on the semaphore - this latency may have been covered by iterator construction
+    // if (kSplitKSerial && params.grid_tiled_shape.k() > 1) {
         
-      // For subsequent threadblocks, the source matrix is held in the 'D' tensor.
-      if (threadblock_tile_offset.k()) {
-        iterator_C = iterator_D;
-      }
+    //   // For subsequent threadblocks, the source matrix is held in the 'D' tensor.
+    //   if (threadblock_tile_offset.k()) {
+    //     iterator_C = iterator_D;
+    //   }
 
-      semaphore.wait(threadblock_tile_offset.k());
+    //   semaphore.wait(threadblock_tile_offset.k());
 
-    }
+    // }
 
-    // Execute the epilogue operator to update the destination tensor.
-    epilogue(output_op, iterator_D, accumulators, iterator_C); 
+    // // Execute the epilogue operator to update the destination tensor.
+    // epilogue(output_op, iterator_D, accumulators, iterator_C); 
     
-    //
-    // Release the semaphore
-    //
+    // //
+    // // Release the semaphore
+    // //
 
-    if (kSplitKSerial && params.grid_tiled_shape.k() > 1) {
+    // if (kSplitKSerial && params.grid_tiled_shape.k() > 1) {
       
-      int lock = 0;
-      if (params.grid_tiled_shape.k() == threadblock_tile_offset.k() + 1) {
+    //   int lock = 0;
+    //   if (params.grid_tiled_shape.k() == threadblock_tile_offset.k() + 1) {
 
-        // The final threadblock resets the semaphore for subsequent grids.
-        lock = 0;
-      }
-      else {
-        // Otherwise, the semaphore is incremented
-        lock = threadblock_tile_offset.k() + 1;
-      }
+    //     // The final threadblock resets the semaphore for subsequent grids.
+    //     lock = 0;
+    //   }
+    //   else {
+    //     // Otherwise, the semaphore is incremented
+    //     lock = threadblock_tile_offset.k() + 1;
+    //   }
 
-      semaphore.release(lock);
-    }
+    //   semaphore.release(lock);
+    // }
   }
 };
 

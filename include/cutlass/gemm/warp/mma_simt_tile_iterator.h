@@ -157,13 +157,14 @@ public:
 
   /// Fragment object holding a thread's part of a tile
   using Fragment = Array<Element, ThreadShape::kCount>;
-
+  using DteContext_ = DteContext<tops_dte_ctx_t>;
 private:
 
   /// Internal reference
-  cutlass::TensorRef<Array<Element, Policy::LaneMmaShape::kM>, layout::ColumnMajor> ref_;
+  cutlass::TensorRef<Array<Element, 32>, layout::ColumnMajor> ref_;
 
 public:
+  DteContext_ *dctx;
   
   /// Default ctor constructs null iterator
   CUTLASS_HOST_DEVICE
@@ -172,21 +173,23 @@ public:
   /// Constructor from TensorRef
   CUTLASS_HOST_DEVICE
   MmaSimtTileIterator(
+    DteContext_ &dctx,
     TensorRef ref, 
     int lane_id
-  ) {
+  ):dctx(&dctx) {
 
     // compute offset based on thread ID and lane layout
-    typename Policy::LaneLayout lane_layout = Policy::get_lane_layout();
+    // typename Policy::LaneLayout lane_layout = Policy::get_lane_layout();
 
-    MatrixCoord lane_offset = lane_layout.inverse(lane_id) * 
-      MatrixCoord(Policy::LaneMmaShape::kM, 0);
+    // MatrixCoord lane_offset = lane_layout.inverse(lane_id) * 
+    //   MatrixCoord(Policy::LaneMmaShape::kM, 0);
+    MatrixCoord lane_offset = MatrixCoord(0,0);
 
     ref.add_coord_offset(lane_offset);
 
     ref_.reset(
-      reinterpret_cast<Array<Element, Policy::LaneMmaShape::kM> *>(ref.data()),
-      ref.stride(0) / Policy::LaneMmaShape::kM);
+      reinterpret_cast<Array<Element, 32> *>(ref.data()),
+      ref.stride(0) / 1);
   }
   
 
@@ -229,9 +232,9 @@ public:
   /// Loads a fragment from memory at the location pointed to by the iterator. (vector loads)
   CUTLASS_HOST_DEVICE
   void load_with_pointer_offset(Fragment &frag, Index pointer_offset) const {
-    Array<Element, Policy::LaneMmaShape::kM> *dst_ptr = 
-      reinterpret_cast<Array<Element, Policy::LaneMmaShape::kM> *>(&frag);
-
+    Array<Element, 32> *dst_ptr = 
+      reinterpret_cast<Array<Element, 32> *>(&frag);
+    tops_dte_ctx_t* ctx = dctx->get_topdtectx();
     CUTLASS_PRAGMA_UNROLL
     for (int k = 0; k < Iterations::kColumn; ++k) {
       CUTLASS_PRAGMA_UNROLL
@@ -243,8 +246,8 @@ public:
           *(ref_.data() + ref_.offset({m * Policy::WarpShape::kRow, k}) + pointer_offset / Policy::LaneMmaShape::kM);
         #endif
 
-        auto ptr = ref_.data() + ref_.offset({m * Policy::WarpShape::kRow, k}) + pointer_offset / Policy::LaneMmaShape::kM;
-        // arch::shared_load(dst_ptr[m + k * Iterations::kRow], ptr);
+        auto ptr = ref_.data() + ref_.offset({m * 1, k}) + pointer_offset;
+        arch::shared_load(dst_ptr[m + k * Iterations::kRow], ptr,ctx);
       }
     }
   }
@@ -265,7 +268,7 @@ public:
     for (int k = 0; k < Iterations::kN; ++k) {
       CUTLASS_PRAGMA_UNROLL
       for (int m = 0; m < Iterations::kM; ++m) {
-        *(ref_.data() + ref_.offset(m * Policy::WarpShape::kM, k) + pointer_offset / Policy::LaneMmaShape::kM) = 
+        *(ref_.data() + ref_.offset(m * 1, k) + pointer_offset / 1) = 
           src_ptr[m + k * Iterations::kM];
       }
     }
@@ -338,6 +341,9 @@ public:
   /// Coordinate for an element in the tensor
   using TensorCoord = typename TensorRef::TensorCoord;
 
+  using DteContext_ = DteContext<tops_dte_ctx_t>;
+
+
   //
   // Derived quantities
   //
@@ -384,6 +390,8 @@ private:
   /// Used to conditionally enable extents checking
   bool divisible_;
 
+  DteContext_ *dctx;
+
 public:
   
   /// Default ctor constructs null iterator
@@ -393,9 +401,10 @@ public:
   /// Constructor from TensorRef
   CUTLASS_HOST_DEVICE
   MmaSimtTileIterator(
+    DteContext_ &dctx,
     TensorRef ref, 
     int lane_id
-  ) : extent_(Shape::kRow, Shape::kColumn), divisible_ (true) {
+  ) : extent_(Shape::kRow, Shape::kColumn), divisible_ (true),dctx(&dctx) {
 
     // compute offset based on thread ID and lane layout
     typename Policy::LaneLayout lane_layout = Policy::get_lane_layout();
@@ -593,6 +602,9 @@ public:
   /// Coordinate for an element in the tensor
   using TensorCoord = typename TensorRef::TensorCoord;
 
+  using DteContext_ = DteContext<tops_dte_ctx_t>;
+
+
   //
   // Derived quantities
   //
@@ -632,6 +644,7 @@ protected:
   cutlass::TensorRef<Array<Element, Policy::LaneMmaShape::kN>, layout::RowMajor> ref_;
 
 public:
+  DteContext_ *dctx;
   
   /// Default ctor constructs null iterator
   CUTLASS_HOST_DEVICE
@@ -640,9 +653,10 @@ public:
   /// Constructor from TensorRef
   CUTLASS_HOST_DEVICE
   MmaSimtTileIterator(
+    DteContext_ &dctx,
     TensorRef ref, 
     int lane_id
-  ) {
+  ):dctx(&dctx) {
 
     // compute offset based on thread ID and lane layout
     typename Policy::LaneLayout lane_layout = Policy::get_lane_layout();
@@ -806,6 +820,9 @@ public:
   /// Coordinate for an element in the tensor
   using TensorCoord = typename TensorRef::TensorCoord;
 
+  using DteContext_ = DteContext<tops_dte_ctx_t>;
+
+
   //
   // Derived quantities
   //
@@ -854,6 +871,7 @@ private:
   bool divisible_;
 
 public:
+  DteContext_ *dctx;
   
   /// Default ctor constructs null iterator
   CUTLASS_HOST_DEVICE
@@ -862,9 +880,10 @@ public:
   /// Constructor from TensorRef
   CUTLASS_HOST_DEVICE
   MmaSimtTileIterator(
+    DteContext_ &dctx,
     TensorRef ref, 
     int lane_id
-  ): extent_(Shape::kRow, Shape::kColumn), divisible_(true) {
+  ): extent_(Shape::kRow, Shape::kColumn), divisible_(true),dctx(&dctx) {
 
     // compute offset based on thread ID and lane layout
     typename Policy::LaneLayout lane_layout = Policy::get_lane_layout();

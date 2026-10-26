@@ -169,14 +169,14 @@ struct DefaultMma<ElementA, LayoutA, kAlignmentA, ElementB, LayoutB,
       cutlass::transform::threadblock::PredicatedTileIterator<
           cutlass::MatrixShape<MmaCore::Shape::kM, MmaCore::Shape::kK>,
           ElementA, LayoutA, 1, typename MmaCore::IteratorThreadMapA, kAlignmentA,
-          GatherA, PermuteALayout>;
+          GatherA, PermuteALayout,DteContext<tops_dte_ctx_t>>;
 
   // Define iterators over tiles from the B operand
   using IteratorB =
       cutlass::transform::threadblock::PredicatedTileIterator<
           cutlass::MatrixShape<MmaCore::Shape::kK, MmaCore::Shape::kN>,
           ElementB, LayoutB, 0, typename MmaCore::IteratorThreadMapB, kAlignmentB,
-          GatherB, PermuteBLayout>;
+          GatherB, PermuteBLayout,DteContext<tops_dte_ctx_t>>;
 
   // Define the threadblock-scoped pipelined matrix multiply
   using ThreadblockMma = cutlass::gemm::threadblock::MmaPipelined<

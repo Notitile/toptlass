@@ -119,6 +119,8 @@ class MmaBase {
   /// Number of stages
   static int const kStages = Stages;
 
+  using DteContext_ = DteContext<tops_dte_ctx_t>;
+
   /// Tensor reference to the A operand
   using TensorRefA = TensorRef<typename Operator::ElementA, typename Operator::LayoutA>;
 
@@ -212,6 +214,7 @@ public:
   /// Construct from tensor references
   CUTLASS_DEVICE
   MmaBase(
+      DteContext_ &dctx,
       ///< Shared storage needed for internal use by threadblock-scoped GEMM
       SharedStorage &shared_storage,
       ///< ID within the threadblock
@@ -221,8 +224,8 @@ public:
       ///< ID of each thread within a warp
       int lane_idx
     ):
-      warp_tile_iterator_A_(shared_storage.operand_A_ref(), lane_idx),
-      warp_tile_iterator_B_(shared_storage.operand_B_ref(), lane_idx) {
+      warp_tile_iterator_A_(dctx,shared_storage.operand_A_ref(), lane_idx),
+      warp_tile_iterator_B_(dctx,shared_storage.operand_B_ref(), lane_idx) {
 
   }
 };

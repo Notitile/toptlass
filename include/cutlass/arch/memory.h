@@ -356,8 +356,17 @@ struct global_load<AccessType,
                    CacheOperation::Always
                   > {
   CUTLASS_DEVICE
-  global_load(AccessType &D, void const *ptr, bool pred_guard) {
-    if (pred_guard) D = *(reinterpret_cast<AccessType const *>(ptr));
+  global_load(AccessType &D, void *ptr, bool pred_guard,tops_dte_ctx_t* ctx) {
+    if (pred_guard) {
+      // D = *(reinterpret_cast<AccessType const *>(ptr));
+      AccessType tmp = *reinterpret_cast<AccessType *>(ptr);
+
+      tops::memcpy(*ctx,tops::mdspan(tops::Private,D.data(),32),
+                        tops::mdspan(tops::Global,tmp.data(),32)
+                      );
+
+    }
+    
   }
 };
 
@@ -505,6 +514,35 @@ struct global_store<AccessType, 1> {
 template <int Bytes>
 CUTLASS_DEVICE
 void shared_load(void *dst, uint32_t ptr);
+
+
+template <typename AccessType, int Bytes>
+struct shared_load_op {};
+
+template <typename AccessType>
+struct shared_load_op<AccessType, 128> {
+  CUTLASS_DEVICE
+  shared_load_op(AccessType &D, void  *ptr,tops_dte_ctx_t *ctx) {
+
+
+    AccessType tmp = *reinterpret_cast<AccessType *>(ptr);
+
+    tops::memcpy(*ctx,tops::mdspan(tops::Private,D.data(),32),
+                      tops::mdspan(tops::Shared,tmp.data(),32)
+                    );
+
+  }
+};
+
+template <typename AccessType>
+CUTLASS_DEVICE void shared_load(AccessType &D, void  *ptr,tops_dte_ctx_t *ctx) {
+  // PrintType<AccessType> _;
+  shared_load_op<AccessType, int(sizeof(AccessType))>(D, ptr,ctx);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 
 /// ld.shared - 16b
 // template <>

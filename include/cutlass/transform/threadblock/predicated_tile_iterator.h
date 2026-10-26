@@ -138,12 +138,12 @@ template <
   typename ThreadMap,
   int AccessSize = ThreadMap::kElementsPerAccess,
   bool Gather = false,
-  typename PermuteLayout = layout::NoPermute
+  typename PermuteLayout = layout::NoPermute,
+  typename DteContext_ = DteContext<>
 >
 class PredicatedTileIterator;
 
-template<typename T>
-struct PrintType;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -157,7 +157,7 @@ struct PrintType;
 template <typename Shape_, typename Element_, int AdvanceRank,
           typename ThreadMap_, int AccessSize, bool Gather, typename PermuteLayout>
 class PredicatedTileIterator<Shape_, Element_, layout::PitchLinear, AdvanceRank,
-                             ThreadMap_, AccessSize, Gather, PermuteLayout> {
+                             ThreadMap_, AccessSize, Gather, PermuteLayout,DteContext<tops_dte_ctx_t>> {
  public:
   static_assert(
       AdvanceRank == 0 || AdvanceRank == 1,
@@ -182,11 +182,12 @@ class PredicatedTileIterator<Shape_, Element_, layout::PitchLinear, AdvanceRank,
 
   /// Type used for internal memory accesses
   using AccessType = AlignedArray<Element, AccessSize, (AccessSize * sizeof_bits<Element>::value / 8)>;
-
+  using DteContext_ = DteContext<tops_dte_ctx_t>;
+  
   /// Underlying iterator to compute the addresses
   using TileAccessIterator =
       PredicatedTileAccessIterator<Shape, Element, Layout, kAdvanceRank,
-                                   ThreadMap, AccessType, Gather, PermuteLayout>;
+                                   ThreadMap, AccessType, Gather, PermuteLayout,DteContext_>;
 
   static int const kAccessesPerVector = TileAccessIterator::kAccessesPerVector;
 
@@ -233,7 +234,10 @@ class PredicatedTileIterator<Shape_, Element_, layout::PitchLinear, AdvanceRank,
   /// Data member to the tile access iterator
   TileAccessIterator address_iterator_;
 
+
  public:
+
+  DteContext_* ctx_;
 
   /// Default constructor
   PredicatedTileIterator() = default;
@@ -242,6 +246,7 @@ class PredicatedTileIterator<Shape_, Element_, layout::PitchLinear, AdvanceRank,
   /// and thread ID
   CUTLASS_HOST_DEVICE
   PredicatedTileIterator(
+      DteContext_ &ctx,
       /// Precomputed parameters object
       Params const &params,
       /// Pointer to start of tensor
@@ -254,18 +259,19 @@ class PredicatedTileIterator<Shape_, Element_, layout::PitchLinear, AdvanceRank,
       TensorCoord const &threadblock_offset,
       /// Gather indices
       int const *indices = nullptr)
-      : address_iterator_(params.params_, pointer, extent, thread_id,
-                          threadblock_offset, indices) {}
+      : address_iterator_(ctx,params.params_, pointer, extent, thread_id,
+                          threadblock_offset, indices),ctx_(&ctx) {}
 
   /// Construct a PredicatedTileIterator with zero threadblock offset
   CUTLASS_HOST_DEVICE
   PredicatedTileIterator(
+      DteContext_ &ctx,
       Params const &params,  ///< Precomputed parameters object
       Pointer pointer,       ///< Pointer to start of tensor
       TensorCoord extent,    ///< Extent of tensor
       int thread_id          ///< ID of each participating thread
       )
-      : PredicatedTileIterator(params, pointer, extent, thread_id,
+      : PredicatedTileIterator(ctx,params, pointer, extent, thread_id,
                                make_Coord(0, 0)) {}
 
   /// Adds a pointer offset in units of Element
@@ -327,7 +333,7 @@ class PredicatedTileIterator<Shape_, Element_, layout::PitchLinear, AdvanceRank,
   CUTLASS_DEVICE
   void load_with_byte_offset(Fragment &frag, LongIndex byte_offset) {
     AccessType *frag_ptr = reinterpret_cast<AccessType *>(&frag);
-
+    tops_dte_ctx_t* dte_ctx = ctx_->get_topdtectx();
     CUTLASS_PRAGMA_UNROLL
     for (int s = 0; s < ThreadMap::Iterations::kStrided; ++s) {
       CUTLASS_PRAGMA_UNROLL
@@ -339,13 +345,13 @@ class PredicatedTileIterator<Shape_, Element_, layout::PitchLinear, AdvanceRank,
           int idx = v + kAccessesPerVector * (c + s * ThreadMap::Iterations::kContiguous);
           
           address_iterator_.set_iteration_index(idx);
-          char const *byte_ptr = reinterpret_cast<char const *>(address_iterator_.get()) + byte_offset;
+          char *byte_ptr = reinterpret_cast<char *>(address_iterator_.get()) + byte_offset;
 
-          AccessType const *access_ptr = reinterpret_cast<AccessType const *>(byte_ptr);
+          AccessType *access_ptr = reinterpret_cast<AccessType *>(byte_ptr);
           cutlass::arch::global_load<AccessType,
                                      sizeof(AccessType)
                                     >(
-              frag_ptr[idx], access_ptr, address_iterator_.valid());
+              frag_ptr[idx], access_ptr, address_iterator_.valid(),dte_ctx);
 
           ++address_iterator_;
         }
@@ -414,7 +420,7 @@ template <
   typename PermuteLayout
 >
 class PredicatedTileIterator<Shape_, Element_, layout::ColumnMajor, AdvanceRank, 
-                             ThreadMap_, AccessSize, Gather, PermuteLayout> {
+                             ThreadMap_, AccessSize, Gather, PermuteLayout,DteContext<tops_dte_ctx_t>> {
 public:
 
   static_assert(AdvanceRank == 0 || AdvanceRank == 1, 
@@ -436,6 +442,7 @@ public:
 
   using Pointer = Element *;
   using NonConstPointer = typename platform::remove_const<Element>::type *;
+  using DteContext_ = DteContext<tops_dte_ctx_t>;
 
   using UnderlyingIterator = PredicatedTileIterator<
     layout::PitchLinearShape<Shape::kRow, Shape::kColumn>,
@@ -498,6 +505,7 @@ public:
   /// Constructs a TileIterator from its precomputed state, threadblock offset, and thread ID
   CUTLASS_HOST_DEVICE
   PredicatedTileIterator(
+    DteContext_ &ctx,
     Params const &params,                         ///< Precomputed parameters object 
     Pointer pointer,                              ///< Pointer to start of tensor
     TensorCoord extent,                           ///< Extent of tensor
@@ -506,6 +514,7 @@ public:
     int const *indices = nullptr     ///< gather/scatter indices, note no support for gather/scatter at this specialization
   ):
     iterator_(
+      ctx,
       params.params_,
       pointer,
       layout::PitchLinearCoord(extent.row(), extent.column()),
@@ -517,11 +526,12 @@ public:
   /// Construct a PredicatedTileIterator with zero threadblock offset
   CUTLASS_HOST_DEVICE
   PredicatedTileIterator(
+    DteContext_ &ctx,
     Params const &params,                         ///< Precomputed parameters object
     Pointer pointer,                              ///< Pointer to start of tensor
     TensorCoord extent,                           ///< Extent of tensor
     int thread_id                                 ///< ID of each participating thread
-  ): PredicatedTileIterator(params, pointer, extent, thread_id, make_Coord(0, 0)) { }
+  ): PredicatedTileIterator(ctx,params, pointer, extent, thread_id, make_Coord(0, 0)) { }
 
   /// Adds a pointer offset in units of Element
   CUTLASS_HOST_DEVICE
@@ -632,7 +642,7 @@ template <
   typename PermuteLayout
 >
 class PredicatedTileIterator<Shape_, Element_, layout::RowMajor, AdvanceRank, 
-                             ThreadMap_, AccessSize, Gather, PermuteLayout> {
+                             ThreadMap_, AccessSize, Gather, PermuteLayout,DteContext<tops_dte_ctx_t>> {
 public:
 
   static_assert(AdvanceRank == 0 || AdvanceRank == 1, 
@@ -654,6 +664,7 @@ public:
 
   using Pointer = Element *;
   using NonConstPointer = typename platform::remove_const<Element>::type *;
+  using DteContext_ = DteContext<tops_dte_ctx_t>;
 
   using UnderlyingIterator = PredicatedTileIterator<
     layout::PitchLinearShape<Shape::kColumn, Shape::kRow>,
@@ -663,7 +674,8 @@ public:
     ThreadMap,
     AccessSize,
     Gather,
-    PermuteLayout
+    PermuteLayout,
+    DteContext_
   >;
 
   using AccessType = typename UnderlyingIterator::AccessType;
@@ -673,6 +685,7 @@ public:
 
   /// Predicate vector stores mask to guard accesses
   using Mask = typename UnderlyingIterator::Mask;
+
 
   /// Parameters object is precomputed state and is host-constructible
   class Params {
@@ -715,6 +728,7 @@ public:
   /// Constructs a TileIterator from its precomputed state, threadblock offset, and thread ID
   CUTLASS_HOST_DEVICE
   PredicatedTileIterator(
+    DteContext_ &ctx,
     Params const &params,                         ///< Precomputed parameters object 
     Pointer pointer,                              ///< Pointer to start of tensor
     TensorCoord extent,                           ///< Extent of tensor
@@ -723,6 +737,7 @@ public:
     int const *indices = nullptr                        ///< Gather indices
   ):
     iterator_(
+      ctx,
       params.params_,
       pointer,
       layout::PitchLinearCoord(extent.column(), extent.row()),
@@ -734,11 +749,12 @@ public:
   /// Construct a PredicatedTileIterator with zero threadblock offset
   CUTLASS_HOST_DEVICE
   PredicatedTileIterator(
+    DteContext_ &ctx,
     Params const &params,                         ///< Precomputed parameters object
     Pointer pointer,                              ///< Pointer to start of tensor
     TensorCoord extent,                           ///< Extent of tensor
     int thread_id                                 ///< ID of each participating thread
-  ): PredicatedTileIterator(params, pointer, extent, thread_id, make_Coord(0, 0)) { }
+  ): PredicatedTileIterator(ctx,params, pointer, extent, thread_id, make_Coord(0, 0)) { }
 
   /// Adds a pointer offset in units of Element
   CUTLASS_HOST_DEVICE

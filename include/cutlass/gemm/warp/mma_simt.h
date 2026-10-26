@@ -111,7 +111,7 @@ public:
   using OperatorClass = arch::OpClassSimt;
 
   /// Hard-coded for now
-  using ArchTag = arch::Sm50;
+  using ArchTag = arch::Gcu300;
 
   /// Complex transform on A operand
   static ComplexTransform const kTransformA = TransformA;
@@ -120,19 +120,21 @@ public:
   static ComplexTransform const kTransformB = TransformB;
 
   /// Layout of threads
-  using ThreadLayoutA = typename platform::conditional< platform::is_same< layout::ColumnMajorInterleaved<4>, LayoutA >::value,
-                  layout::ColumnMajor,
-                  typename platform::conditional < platform::is_same< layout::RowMajorInterleaved<4>, LayoutA >::value,
-                      layout::RowMajor,
-                      LayoutA>::type
-                 >::type;
+  // using ThreadLayoutA = typename platform::conditional< platform::is_same< layout::ColumnMajorInterleaved<4>, LayoutA >::value,
+  //                 layout::ColumnMajor,
+  //                 typename platform::conditional < platform::is_same< layout::RowMajorInterleaved<4>, LayoutA >::value,
+  //                     layout::RowMajor,
+  //                     LayoutA>::type
+  //                >::type;
+  using ThreadLayoutA = LayoutA;
   
-  using ThreadLayoutB = typename platform::conditional< platform::is_same< layout::ColumnMajorInterleaved<4>, LayoutB >::value,
-                  layout::ColumnMajor,
-                  typename platform::conditional < platform::is_same< layout::RowMajorInterleaved<4>, LayoutB >::value,
-                      layout::RowMajor,
-                      LayoutB>::type
-                 >::type;
+  // using ThreadLayoutB = typename platform::conditional< platform::is_same< layout::ColumnMajorInterleaved<4>, LayoutB >::value,
+  //                 layout::ColumnMajor,
+  //                 typename platform::conditional < platform::is_same< layout::RowMajorInterleaved<4>, LayoutB >::value,
+  //                     layout::RowMajor,
+  //                     LayoutB>::type
+  //                >::type;
+  using ThreadLayoutB = LayoutB;
 
   static constexpr bool use_dp4a = (platform::is_same< layout::ColumnMajorInterleaved<4>, LayoutA>::value || 
                                     platform::is_same< layout::RowMajorInterleaved<4>, LayoutA >::value) && 
@@ -192,7 +194,7 @@ public:
 
   /// Iterates over the B operand in memory
   using IteratorB = MmaSimtTileIterator<
-    MatrixShape<Policy::LaneMmaShape::kK, Shape::kN>,
+    MatrixShape<Shape::kK, Shape::kN>,
     Operand::kB,
     ElementB,
     LayoutB,
@@ -233,9 +235,9 @@ public:
   CUTLASS_DEVICE
   void operator()(
     FragmentC &d, 
-    FragmentA a, 
-    FragmentB b, 
-    FragmentC const &c, int group_idx = 0) const {
+    FragmentA &a, 
+    FragmentB &b, 
+    FragmentC  &c) const {
 
     ThreadMma mma;
 
@@ -248,7 +250,7 @@ public:
       conjugate<FragmentB> conj_b;
       b = conj_b(b);
     }
-
+    // PrintType<FragmentA,FragmentB,FragmentC> _;
     mma(d, a, b, c);
   }
 

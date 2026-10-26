@@ -42,7 +42,7 @@
 
 namespace cutlass {
 
-template<typename T>
+template<typename... T>
 struct PrintType;
 
 /// Status code returned by CUTLASS operations
@@ -155,6 +155,38 @@ int canonical_warp_group_idx() {
     return 0;
   #endif
 }
+
+class EmptyContext {
+public:
+  CUTLASS_HOST_DEVICE
+  EmptyContext() = default;
+};
+
+template<typename Context = EmptyContext>
+class DteContext{};
+
+template<>
+class DteContext<tops_dte_ctx_t> {
+public:
+    CUTLASS_DEVICE
+    DteContext() : ctx(nullptr) {}
+
+    
+
+    CUTLASS_DEVICE
+    DteContext(tops_dte_ctx_t* c) : ctx(c) {}
+
+
+    CUTLASS_DEVICE
+    tops_dte_ctx_t* get_topdtectx(){
+      return ctx;
+    }
+
+private:
+    tops_dte_ctx_t* ctx;
+
+};
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 

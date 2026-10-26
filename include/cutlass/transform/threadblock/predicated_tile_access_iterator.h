@@ -316,7 +316,7 @@ class PredicatedTileAccessIteratorPredicates {
 ///
 template <typename Shape, typename Element, typename Layout, int AdvanceRank,
           typename ThreadMap, typename AccessType, bool Gather = false,
-          typename PermuteLayout = layout::NoPermute>
+          typename PermuteLayout = layout::NoPermute,typename DteContext_ = DteContext<>>
 class PredicatedTileAccessIterator;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -328,7 +328,7 @@ template <typename Shape_, typename Element_, int AdvanceRank,
           typename PermuteLayout>
 class PredicatedTileAccessIterator<Shape_, Element_, layout::PitchLinear,
                                    AdvanceRank, ThreadMap_, AccessType_, Gather,
-                                   PermuteLayout> {
+                                   PermuteLayout,DteContext<tops_dte_ctx_t> >{
  public:
   static_assert(
       AdvanceRank == 0 || AdvanceRank == 1,
@@ -341,6 +341,7 @@ class PredicatedTileAccessIterator<Shape_, Element_, layout::PitchLinear,
   static int const kAdvanceRank = AdvanceRank;
   using ThreadMap = ThreadMap_;
   using AccessType = AccessType_;
+  using DteContext_ = DteContext<tops_dte_ctx_t>;
 
   using Index = typename Layout::Index;
   using LongIndex = typename Layout::LongIndex;
@@ -413,6 +414,8 @@ class PredicatedTileAccessIterator<Shape_, Element_, layout::PitchLinear,
   /// Gather indices
   int const *indices_;
 
+  DteContext<tops_dte_ctx_t> ctx;
+
   /// Function to perform layout permutation and offset computation
   PermuteLayout permute_layout_;
 
@@ -442,6 +445,7 @@ class PredicatedTileAccessIterator<Shape_, Element_, layout::PitchLinear,
   /// and thread ID
   CUTLASS_HOST_DEVICE
   PredicatedTileAccessIterator(
+      DteContext_ &ctx,
       /// Precomputed parameters object
       Params const &params,
       /// Pointer to start of tensor
@@ -460,7 +464,7 @@ class PredicatedTileAccessIterator<Shape_, Element_, layout::PitchLinear,
 	      the_predicates(extent),
         is_residue_tile_(true),
         indices_(indices),
-        permute_layout_(TensorCoord(extent.contiguous(), extent.strided()), params.stride_) {
+        permute_layout_(TensorCoord(extent.contiguous(), extent.strided()), params.stride_),ctx(ctx) {
 
     the_predicates.set_predicates(thread_id, threadblock_offset);
           

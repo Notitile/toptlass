@@ -125,15 +125,15 @@ struct MmaGeneric {
   CUTLASS_HOST_DEVICE
   void operator()(
     FragmentC & D,
-    FragmentA const & A,
-    FragmentB const & B,
-    FragmentC const & C) {
+    FragmentA  & A,
+    FragmentB  & B,
+    FragmentC  & C) {
 
-    TensorRef<ElementA const, LayoutA> a_ref(
-      reinterpret_cast<ElementA const *>(&A), LayoutA::packed({Shape::kM, Shape::kK}));
+    TensorRef<ElementA, LayoutA> a_ref(
+      reinterpret_cast<ElementA  *>(&A), LayoutA::packed({Shape::kM, Shape::kK}));
 
     TensorRef<ElementB const, LayoutB> b_ref(
-      reinterpret_cast<ElementB const *>(&B), LayoutB::packed({Shape::kK, Shape::kN}));
+      reinterpret_cast<ElementB  *>(&B), LayoutB::packed({Shape::kK, Shape::kN}));
 
     TensorRef<ElementC, LayoutC> d_ref(
       reinterpret_cast<ElementC *>(&D), LayoutC::packed(make_Coord(Shape::kM, Shape::kN)));
@@ -513,9 +513,9 @@ struct Mma<
   CUTLASS_HOST_DEVICE
   void operator()(
     FragmentC & D,
-    FragmentA const & A,
-    FragmentB const & B,
-    FragmentC const & C) {
+    FragmentA  & A,
+    FragmentB  & B,
+    FragmentC  & C) {
 
     MmaGeneric<
       Shape,

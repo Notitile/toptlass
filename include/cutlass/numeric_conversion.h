@@ -3145,7 +3145,7 @@ namespace detail {
       typename ArrayConverter::result_type& result,
       typename ArrayConverter::source_type const& source) {
 
-      using ElementRes = typename ArrayConverter::result_type::Element;
+      // using ElementRes = typename ArrayConverter::result_type::Element;
       using ElementSrc = typename ArrayConverter::source_type::Element;
       // If no more converters, handle the remaining elements as scalars.
       constexpr int total_elements = ArrayConverter::result_type::kElements;
