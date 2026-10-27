@@ -66,7 +66,7 @@ struct Gemm {
 
   /// Warp count (concept: GemmShape)
   using WarpCount = typename Mma::WarpCount;
-  static int const kThreadCount = 32 * WarpCount::kCount;
+  static int const kThreadCount = 1 * WarpCount::kCount;
 
   /// Parameters structure
   struct Params {
@@ -278,10 +278,10 @@ struct Gemm {
     typename Mma::FragmentC accumulators;
 
     accumulators.clear();
-
     if (!kSplitKSerial || gemm_k_iterations > 0) {
       // Compute threadblock-scoped matrix multiply-add
       mma(gemm_k_iterations, accumulators, iterator_A, iterator_B, accumulators);
+      // mma(gemm_k_iterations,iterator_A);
     }
 
     //

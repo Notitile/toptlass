@@ -1,7 +1,4 @@
 examples/00_basic_gemm/CMakeFiles/basic_gemm.dir/basic_gemm.cpp.o: \
-  /opt/tops/bin/../lib/krt/gcu300_api_debug.bc \
-  /opt/tops/bin/../lib/krt/gcu300_inline_vector_debug.bc \
-  /opt/tops/bin/../lib/krt/gcu300_no_debug_check_debug.bc \
   /home/yangbiao/toptlass/examples/00_basic_gemm/basic_gemm.cpp \
   /opt/tops/lib/clang/11.0.0/include/tops.h \
   /opt/tops/lib/clang/11.0.0/include/tops/__tops_defines.h \
@@ -24,13 +21,7 @@ examples/00_basic_gemm/CMakeFiles/basic_gemm.dir/basic_gemm.cpp.o: \
   /opt/tops/lib/clang/11.0.0/include/tcle_tar.h \
   /opt/tops/lib/clang/11.0.0/include/tcle_2d.h \
   /opt/tops/lib/clang/11.0.0/include/tops/__tops_implicit_params.h \
-  /opt/tops/bin/../include/tops_wrappers/assert.h \
-  /opt/tops/lib/clang/11.0.0/include/krt/builtins.h \
-  /opt/tops/lib/clang/11.0.0/include/krt/common.h \
-  /opt/tops/lib/clang/11.0.0/include/tops/__tops_vector.h \
-  /usr/lib/gcc/x86_64-linux-gnu/12/../../../../include/c++/12/type_traits \
-  /usr/lib/gcc/x86_64-linux-gnu/12/../../../../include/x86_64-linux-gnu/c++/12/bits/c++config.h \
-  /usr/lib/gcc/x86_64-linux-gnu/12/../../../../include/x86_64-linux-gnu/c++/12/bits/os_defines.h \
+  /opt/tops/bin/../include/tops_wrappers/assert.h /usr/include/assert.h \
   /usr/include/features.h /usr/include/features-time64.h \
   /usr/include/x86_64-linux-gnu/bits/wordsize.h \
   /usr/include/x86_64-linux-gnu/bits/timesize.h \
@@ -38,10 +29,15 @@ examples/00_basic_gemm/CMakeFiles/basic_gemm.dir/basic_gemm.cpp.o: \
   /usr/include/x86_64-linux-gnu/bits/long-double.h \
   /usr/include/x86_64-linux-gnu/gnu/stubs.h \
   /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+  /opt/tops/lib/clang/11.0.0/include/tops/__tops_vector.h \
+  /usr/lib/gcc/x86_64-linux-gnu/12/../../../../include/c++/12/type_traits \
+  /usr/lib/gcc/x86_64-linux-gnu/12/../../../../include/x86_64-linux-gnu/c++/12/bits/c++config.h \
+  /usr/lib/gcc/x86_64-linux-gnu/12/../../../../include/x86_64-linux-gnu/c++/12/bits/os_defines.h \
   /usr/lib/gcc/x86_64-linux-gnu/12/../../../../include/x86_64-linux-gnu/c++/12/bits/cpu_defines.h \
   /usr/lib/gcc/x86_64-linux-gnu/12/../../../../include/c++/12/pstl/pstl_config.h \
   /opt/tops/lib/clang/11.0.0/include/krt/vector.h \
   /opt/tops/lib/clang/11.0.0/include/krt/vector_infra.h \
+  /opt/tops/lib/clang/11.0.0/include/krt/common.h \
   /opt/tops/lib/clang/11.0.0/include/krt/vector_mask.h \
   /opt/tops/lib/clang/11.0.0/include/krt/leaptr.h \
   /opt/tops/lib/clang/11.0.0/include/tops/__tops_dte.h \

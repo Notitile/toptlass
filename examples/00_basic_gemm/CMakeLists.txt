@@ -64,7 +64,7 @@ foreach(_src_file ${_src_files})
 	string(REPLACE ".cpp" "" _target_name ${_target_name})
 	add_executable(${_target_name} ${_src_file})
 	list(APPEND _target_files ${_target_name})
-	target_compile_options(${_target_name} PRIVATE -Wno-reorder)
+	target_compile_options(${_target_name} PRIVATE -Wno-reorder -g -fno-omit-frame-pointer -O0)
 	target_link_libraries(${_target_name}
 								PRIVATE
 								TOPTLASS)

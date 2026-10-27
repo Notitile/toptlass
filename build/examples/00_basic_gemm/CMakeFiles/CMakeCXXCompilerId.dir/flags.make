@@ -6,5 +6,5 @@ CXX_DEFINES =
 
 CXX_INCLUDES = -I/home/yangbiao/toptlass/include -I/home/yangbiao/toptlass/examples/00_basic_gemm/../Common -I/home/yangbiao/toptlass/build/include -isystem /opt/tops/include -isystem /opt/tops/include/topstx -isystem /opt/tops/include/topstx/topstxDetail -isystem /opt/tops/include/gcu -isystem /opt/tops/include/gcu/umd
 
-CXX_FLAGS = -g -Werror -Wall -Wno-reorder -Wno-unused-variable -std=c++17
+CXX_FLAGS = -g -Werror -Wall -Wno-reorder -g -fno-omit-frame-pointer -O0 -Wno-unused-variable -std=c++17
 

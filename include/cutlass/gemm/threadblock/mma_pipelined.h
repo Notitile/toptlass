@@ -188,7 +188,7 @@ public:
     //   _m: the warp's position within the threadblock along the M dimension
     //   _n: the warp's position within the threadblock along the N dimension
     //   _k: the warp's position within the threadblock along the K dimension
-
+    
     int warp_idx_mn = warp_idx % (Base::WarpCount::kM * Base::WarpCount::kN);
     int warp_idx_k = warp_idx / (Base::WarpCount::kM * Base::WarpCount::kN);
 
@@ -252,7 +252,7 @@ public:
     int &gemm_k_iterations)     ///< [in|out] number of threadblock mainloop iterations remaining
   {
     // The last kblock is loaded in the prolog
-
+    
     // Load A fragment from global A
     __local__ FragmentA tb_frag_A;
     tb_frag_A.clear();
@@ -264,7 +264,7 @@ public:
     tb_frag_B.clear();
     iterator_B.load(tb_frag_B);
     ++iterator_B;
-
+    
     // Store A and B fragments to shared
     this->smem_iterator_A_.store(transform_A_(tb_frag_A));
     this->smem_iterator_B_.store(transform_B_(tb_frag_B));
@@ -414,16 +414,16 @@ public:
   void operator()(
     int gemm_k_iterations,                            ///< number of iterations of the mainloop
     FragmentC &accum,                                 ///< destination accumulator tile
-    IteratorA iterator_A,                             ///< iterator over A operand in global memory
-    IteratorB iterator_B,                             ///< iterator over B operand in global memory
-    FragmentC const &src_accum)                       ///< source accumulator tile
+    IteratorA &iterator_A,                             ///< iterator over A operand in global memory
+    IteratorB &iterator_B,                             ///< iterator over B operand in global memory
+    FragmentC  &src_accum)                       ///< source accumulator tile
   {
     // Prologue
     prologue(iterator_A, iterator_B, gemm_k_iterations);
-
+    
     // Wait until we have at least one completed global fetch stage
     gmem_wait();
-
+    
     // Perform accumulation in the 'd' output operand
     accum = src_accum;
 

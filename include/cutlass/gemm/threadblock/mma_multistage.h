@@ -716,7 +716,7 @@ public:
       IteratorB iterator_B,
       ///< initial value of accumulator
       FragmentC const &src_accum) {
-
+    
     // Prologue (start fetching iterations of global fragments into shared memory)
     prologue(iterator_A, iterator_B, gemm_k_iterations);
 

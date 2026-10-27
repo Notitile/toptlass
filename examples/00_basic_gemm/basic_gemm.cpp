@@ -159,8 +159,8 @@ topsError_t TestToptlassGemm(int M,int N,int K,float alpha,float beta){
     topsError_t result;
 
     // Compute leading dimensions for each matrix.
-    // int lda = M;
-    // int ldb = K;
+    int lda = M;
+    int ldb = K;
     int ldc = M;
 
     // Compute size in bytes of the C matrix.
@@ -226,12 +226,15 @@ topsError_t TestToptlassGemm(int M,int N,int K,float alpha,float beta){
         return result;
     }
 
+    result = TopTlassSgemmNN(M, N, K, alpha, A, lda, B, ldb, beta, C_cutlass, ldc);
+
+
     return result;
 
 }
 
 int main(int argc,const char *arg[]){
-    int problem[3] = {16,16,16};
+    int problem[3] = {128,128,128};
 
     for (int i = 1;i<argc && i < 4;++i){
         std::stringstream ss(arg[i]);
